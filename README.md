@@ -9,8 +9,8 @@
 - `git clone https://github.com/wongjack2332/pseudo-interpreter`
 
 ## Usage
-- run `python interpreter/run.py` for interactive shell
-- `python interpreter/run.py [filename]` runs specific file
+- run `python ocr_lang.py` for interactive shell
+- `python ocr_lang.py [filename]` runs specific file
 
 ## disclaimer
 - this is unfinished, like REALLY UNFINISHED
