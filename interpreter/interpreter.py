@@ -1,37 +1,39 @@
-from . import ValueType, RuntimeVal, NumberVal, NullVal
-from . import BinaryExpr
+from . import ValueType, RuntimeVal, NumberVal 
+from . import BinaryExpr, Identifier
 from . import NodeType, Statement, Program
+from . import Environment
+from . import MK_NULL
 
 
-def evaluate_program(program: Program) -> RuntimeVal:
-    lastEvaluated: RuntimeVal = NullVal()
+def evaluate_program(program: Program, env: Environment) -> RuntimeVal:
+    last_evaluated: RuntimeVal = MK_NULL
     for statement in program.body:
-        lastEvaluated = evaluate(statement)
-    return lastEvaluated
+        last_evaluated = evaluate(statement, env)
+    return last_evaluated
 
 
-def evaluate(astNode: Statement) -> RuntimeVal:
+def evaluate(astNode: Statement, env: Environment) -> RuntimeVal:
     match astNode.get_type():
         case 'NumericLiteral':
             return NumberVal(value=astNode.value)
 
         case 'NullLiteral':
-            return NullVal()
-
+            return MK_NULL()
         case 'BinaryExpr':
-            return evaluate_binary_expression(astNode)
+            return evaluate_binary_expression(astNode, env)
 
         case 'Program':
-            return evaluate_program(astNode)
+            return evaluate_program(astNode, env)
+
+        case 'Identifier':
+            return evaluate_identifier(astNode, env)
 
         case _:
-            print(astNode.get_type())
-            raise TypeError('Invalid AST node type')
+            raise TypeError('Invalid AST node type ' + astNode.get_type())
 
-
-def evaluate_binary_expression(binop: BinaryExpr) -> RuntimeVal:
-    left_side: RuntimeVal = evaluate(binop.left)
-    right_side: RuntimeVal = evaluate(binop.right)
+def evaluate_binary_expression(binop: BinaryExpr, env: Environment) -> RuntimeVal:
+    left_side: RuntimeVal = evaluate(binop.left, env)
+    right_side: RuntimeVal = evaluate(binop.right, env)
 
     if left_side.get_type() == 'NUMBER' and right_side.get_type() == 'NUMBER':
         return eval_numeric_binop(left_side, right_side, binop.operator)
@@ -58,3 +60,7 @@ def eval_numeric_binop(left: NullVal, right: NullVal, operator: str) -> RuntimeV
             pass
 
     return NumberVal(result)
+
+def evaluate_identifier(identifier: Identifier, env: Environment) -> RuntimeVal:
+    val = env.get_var(identifier.symbol)
+    return val

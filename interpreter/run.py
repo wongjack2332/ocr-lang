@@ -4,13 +4,19 @@ from pprint import pprint
 from . import parse_text_from_file
 from . import Parser
 from . import evaluate
+from . import Environment
+from . import NumberVal
+from . import MK_NUMBER, MK_NULL
 
 
 def run_file(lines: str) -> None:
     """Run file"""
     parser = Parser()
+    env = Environment()
+    env.declare_var('x', MK_NUMBER(100))
+    env.declare_var('None', MK_NULL())
     program = parser.produce_ast(lines)
-    result = evaluate(program)
+    result = evaluate(program, env)
     print(result)
     # pprint(program.ast, sort_dicts=False, width=5)
     # print(program.build())
