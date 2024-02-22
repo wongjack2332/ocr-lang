@@ -27,7 +27,6 @@ class Lexer:
 
         self.keywords = {
             'const': 'CONST',
-            'None': 'NULL',
             'global': 'GLOBAL',
             'array': 'ARRAY',
             'for': 'FOR',
@@ -56,14 +55,10 @@ class Lexer:
 
     def run(self) -> None:
         """Run"""
-        print('====lexing====')
-        print(self.lines)
         while self.pos < len(self.lines):
             self.scan_token()
 
         self.tokens.append({'type': 'EOF', 'value': '', 'index': self.pos})
-        print('====lexed=====')
-
 
     def scan_token(self) -> None:
         """Scan token"""
@@ -80,11 +75,12 @@ class Lexer:
                             token_type = self.keywords[match.group()]
                     case _:
                         pass
-                self.tokens.append({'type': token_type, 'value': match.group(), 'index': self.pos})
+                self.tokens.append(
+                    {'type': token_type, 'value': match.group(), 'index': self.pos})
                 break
         else:
-            raise ValueError(f'Invalid token: {search_string[0]}, what are you doing mate')
-
+            raise ValueError(
+                f'Invalid token: {search_string[0]}, what are you doing mate')
 
     def print_tokens(self) -> None:
         """Print tokens"""
@@ -95,4 +91,3 @@ class Lexer:
         """Get next token"""
 
         return self.tokens.pop(0)
-

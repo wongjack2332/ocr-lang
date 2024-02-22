@@ -1,4 +1,4 @@
-from . import Statement, Program, Expression, BinaryExpr, Identifier, NumericLiteral, NodeType, NullLiteral
+from . import Statement, Program, Expression, BinaryExpr, Identifier, NumericLiteral, NodeType 
 from . import Lexer
 
 
@@ -93,8 +93,8 @@ class Parser:
                 value = self.__parse_expression()
                 self.expect('RPAREN', 'Expected ")"')
                 return value
-            case 'NULL':
-                return NullLiteral()
+            # case 'NULL':
+            #     return NullLiteral()
             case _:
                 raise ValueError(f"unexpected token found {tk}")
 

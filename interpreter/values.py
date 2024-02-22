@@ -6,7 +6,7 @@ class ValueType:
         available_types = (
             'NULL',
             'NUMBER',
-            'STRING'
+            'BOOLEAN'
         )
 
         if value_type in available_types:
@@ -21,6 +21,15 @@ class RuntimeVal:
 
     def get_type(self):
         return self.value_type.value_type
+
+    def __str__(self):
+        return str(self.value)
+
+
+class BoolVal(RuntimeVal):
+    def __init__(self, value: bool = False) -> None:
+        super().__init__('BOOLEAN')
+        self.value: bool = value
 
     def __str__(self):
         return str(self.value)
@@ -50,3 +59,6 @@ def MK_NUMBER(value: int = 0) -> NumberVal:
 
 def MK_NULL() -> NullVal:
     return NullVal()
+
+def MK_BOOL(value: bool = True) -> BoolVal:
+    return BoolVal(value)

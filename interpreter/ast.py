@@ -9,7 +9,6 @@ class NodeType:
             'Statement',
             'Program',
             'NumericLiteral',
-            'NullLiteral',
             'Identifier',
             'BinaryExpr',
             'UnaryExpr',
@@ -123,20 +122,3 @@ class NumericLiteral(Expression):
     def get_type(self) -> str:
         return self.node_type.node_type
 
-
-class NullLiteral(Expression):
-    """Null literal in AST"""
-
-    def __init__(self) -> None:
-        super().__init__()
-        self.node_type = NodeType('NullLiteral')
-        self.value: str = 'None'
-
-    def fields(self) -> str:
-        return {
-            'type': self.node_type.node_type,
-            'value': self.value
-        }
-
-    def get_type(self) -> str:
-        return self.node_type.node_type

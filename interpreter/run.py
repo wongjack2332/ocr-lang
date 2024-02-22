@@ -6,7 +6,7 @@ from . import Parser
 from . import evaluate
 from . import Environment
 from . import NumberVal
-from . import MK_NUMBER, MK_NULL
+from . import MK_NUMBER, MK_NULL, MK_BOOL
 
 
 def run_file(lines: str) -> None:
@@ -15,6 +15,8 @@ def run_file(lines: str) -> None:
     env = Environment()
     env.declare_var('x', MK_NUMBER(100))
     env.declare_var('None', MK_NULL())
+    env.declare_var('true', MK_BOOL(True))
+    env.declare_var('false', MK_BOOL(False))
     program = parser.produce_ast(lines)
     result = evaluate(program, env)
     print(result)

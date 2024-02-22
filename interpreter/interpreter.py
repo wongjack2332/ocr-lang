@@ -1,4 +1,4 @@
-from . import ValueType, RuntimeVal, NumberVal 
+from . import ValueType, RuntimeVal, NumberVal, NullVal
 from . import BinaryExpr, Identifier
 from . import NodeType, Statement, Program
 from . import Environment
@@ -17,8 +17,6 @@ def evaluate(astNode: Statement, env: Environment) -> RuntimeVal:
         case 'NumericLiteral':
             return NumberVal(value=astNode.value)
 
-        case 'NullLiteral':
-            return MK_NULL()
         case 'BinaryExpr':
             return evaluate_binary_expression(astNode, env)
 
@@ -31,6 +29,7 @@ def evaluate(astNode: Statement, env: Environment) -> RuntimeVal:
         case _:
             raise TypeError('Invalid AST node type ' + astNode.get_type())
 
+
 def evaluate_binary_expression(binop: BinaryExpr, env: Environment) -> RuntimeVal:
     left_side: RuntimeVal = evaluate(binop.left, env)
     right_side: RuntimeVal = evaluate(binop.right, env)
@@ -38,10 +37,10 @@ def evaluate_binary_expression(binop: BinaryExpr, env: Environment) -> RuntimeVa
     if left_side.get_type() == 'NUMBER' and right_side.get_type() == 'NUMBER':
         return eval_numeric_binop(left_side, right_side, binop.operator)
 
-    return NullVal()
+    return MK_NULL()
 
 
-def eval_numeric_binop(left: NullVal, right: NullVal, operator: str) -> RuntimeVal:
+def eval_numeric_binop(left: NumberVal, right: NumberVal, operator: str) -> RuntimeVal:
     result = 0
     match operator:
         case '+':
@@ -60,6 +59,7 @@ def eval_numeric_binop(left: NullVal, right: NullVal, operator: str) -> RuntimeV
             pass
 
     return NumberVal(result)
+
 
 def evaluate_identifier(identifier: Identifier, env: Environment) -> RuntimeVal:
     val = env.get_var(identifier.symbol)
