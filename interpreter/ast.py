@@ -9,6 +9,7 @@ class NodeType:
             'Statement',
             'Program',
             'NumericLiteral',
+            'AssignmentExpr',
             'Identifier',
             'BinaryExpr',
             'UnaryExpr',
@@ -57,6 +58,23 @@ class Expression(Statement):
 
     def get_type(self) -> str:
         return self.node_type.node_type
+
+
+class AssignmentExpr(Expression):
+    """Assignment expression in AST"""
+
+    def __init__(self, left: str, right: Expression) -> None:
+        super().__init__()
+        self.node_type = NodeType("AssignmentExpr")
+        self.left: str = left
+        self.right: Expression = right
+
+    def fields(self) -> str:
+        return {
+            "type": self.node_type.node_type,
+            "left": self.left,
+            "right": self.right
+        }
 
 
 class BinaryExpr(Expression):
@@ -121,4 +139,3 @@ class NumericLiteral(Expression):
 
     def get_type(self) -> str:
         return self.node_type.node_type
-

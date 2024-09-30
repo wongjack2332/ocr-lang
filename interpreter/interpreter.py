@@ -1,5 +1,5 @@
 from . import ValueType, RuntimeVal, NumberVal, NullVal
-from . import BinaryExpr, Identifier
+from . import BinaryExpr, Identifier, AssignmentExpr
 from . import NodeType, Statement, Program
 from . import Environment
 from . import MK_NULL
@@ -13,6 +13,7 @@ def evaluate_program(program: Program, env: Environment) -> RuntimeVal:
 
 
 def evaluate(astNode: Statement, env: Environment) -> RuntimeVal:
+    print(astNode.fields())
     match astNode.get_type():
         case 'NumericLiteral':
             return NumberVal(value=astNode.value)
@@ -26,8 +27,19 @@ def evaluate(astNode: Statement, env: Environment) -> RuntimeVal:
         case 'Identifier':
             return evaluate_identifier(astNode, env)
 
+        case "AssignmentExpr":
+            return evaluate_assignment_expr(astNode, env)
+
         case _:
             raise TypeError('Invalid AST node type ' + astNode.get_type())
+
+
+def evaluate_assignment_expr(expr: AssignmentExpr, env: Environment) -> RuntimeVal:
+    left_side = expr.left
+    right_side: RuntimeVal = evaluate(expr.right, env)
+    env.assign_var(left_side, right_side)
+
+    return left_side
 
 
 def evaluate_binary_expression(binop: BinaryExpr, env: Environment) -> RuntimeVal:

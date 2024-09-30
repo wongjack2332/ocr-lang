@@ -1,4 +1,4 @@
-from . import Statement, Program, Expression, BinaryExpr, Identifier, NumericLiteral, NodeType 
+from . import Statement, Program, Expression, AssignmentExpr, BinaryExpr, Identifier, NumericLiteral, NodeType
 from . import Lexer
 
 
@@ -9,6 +9,7 @@ class Parser:
     def produce_ast(self, source) -> Program:
         self.tokens = Lexer(source)
         self.tokens.run()
+        self.tokens.print_tokens()
         program: Program = Program()
 
         # parse until the end of file
@@ -19,6 +20,9 @@ class Parser:
 
     def at(self) -> dict:
         return self.tokens.tokens[0]
+
+    def look_forward(self) -> dict:
+        return self.tokens.tokens[1]
 
     def expect(self, token_type: str, err: str) -> dict:
         prev = self.next_token()
@@ -38,7 +42,7 @@ class Parser:
         return self.__parse_expression()
 
     def __parse_expression(self) -> Expression:
-        return self.__parse_additive_expression()
+        return self.__parse_assignment_expression()
 
     # orders of precedence
     """
@@ -52,6 +56,33 @@ class Parser:
     Unary Expr
     Primary Expr
     """
+
+    def __parse_assignment_expression(self) -> Expression:
+        tk: dict = self.at()
+        next_level = self.__parse_comparison_expression
+        match tk['type']:
+            case "NAME":
+                identifier = tk['value']
+                left = identifier
+                if self.look_forward()['type'] == "ASSIGN":
+                    self.next_token()
+                    assign_operator = self.next_token()
+                    right: Expression = next_level()
+                    return AssignmentExpr(left=left, right=right)
+
+                return next_level()
+            case _:
+                return next_level()
+
+    def __parse_comparison_expression(self) -> Expression:
+        left = self.__parse_additive_expression()
+        while self.at()['type'] == 'COMPARE':
+            operator = self.next_token()['value']
+            right = self.__parse_additive_expression()
+            left: BinaryExpr = BinaryExpr(
+                left=left, right=right, operator=operator)
+
+        return left
 
     def __parse_additive_expression(self) -> Expression:
         """Additive expression: 10 + 4 - 5"""
@@ -82,6 +113,7 @@ class Parser:
             case 'NAME':
                 identifier = Identifier()
                 identifier.symbol = tk['value']
+
                 return identifier
 
             case 'NUMBER':
@@ -93,6 +125,7 @@ class Parser:
                 value = self.__parse_expression()
                 self.expect('RPAREN', 'Expected ")"')
                 return value
+
             # case 'NULL':
             #     return NullLiteral()
             case _:

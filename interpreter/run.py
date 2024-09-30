@@ -9,19 +9,24 @@ from . import NumberVal
 from . import MK_NUMBER, MK_NULL, MK_BOOL
 
 
-def run_file(lines: str) -> None:
+def run_file(lines: str, env: Environment) -> None:
     """Run file"""
     parser = Parser()
-    env = Environment()
-    env.declare_var('x', MK_NUMBER(100))
-    env.declare_var('None', MK_NULL())
-    env.declare_var('true', MK_BOOL(True))
-    env.declare_var('false', MK_BOOL(False))
     program = parser.produce_ast(lines)
     result = evaluate(program, env)
     print(result)
     # pprint(program.ast, sort_dicts=False, width=5)
     # print(program.build())
+
+
+def setup_env() -> Environment:
+    """Setup environment"""
+    env = Environment()
+    env.declare_var('x', MK_NUMBER(100))
+    env.declare_var('None', MK_NULL())
+    env.declare_var('true', MK_BOOL(True))
+    env.declare_var('false', MK_BOOL(False))
+    return env
 
 
 def run_command() -> None:
@@ -30,12 +35,13 @@ def run_command() -> None:
     if len(args) <= 1:
         print("no file found, interactive shell launched")
         print("====shell=====")
+        env = setup_env()
         while True:
             line = input('>>> ')
             if line == 'exit':
                 print("===shelled====")
                 break
-            run_file(line)
+            run_file(line, env)
     else:
         filename = args[1]
         lines = parse_text_from_file(filename)
