@@ -153,6 +153,9 @@ class Parser:
                 self.expect('RPAREN', 'Expected ")"')
                 return value
 
+            case 'NEWLINE':
+                return self.__parse_statement()
+
             # case 'NULL':
             #     return NullLiteral()
             case _:

@@ -44,4 +44,5 @@ def run_command() -> None:
         filename = args[1]
         lines = parse_text_from_file(filename)
 
-        run_file(lines)
+        env = setup_env()
+        run_file(lines, env)
