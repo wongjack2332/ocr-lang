@@ -98,10 +98,11 @@ class Parser:
 
     def __parse_additive_expression(self) -> Expression:
         """Additive expression: 10 + 4 - 5"""
-        left = self.__parse_multiplicative_expression()
+        next_level = self.__parse_multiplicative_expression
+        left = next_level()
         while self.at()['value'] in ('+', '-'):
             operator = self.next_token()['value']
-            right = self.__parse_multiplicative_expression()
+            right = next_level()
             left: BinaryExpr = BinaryExpr(
                 left=left, right=right, operator=operator)
 
@@ -109,14 +110,27 @@ class Parser:
 
     def __parse_multiplicative_expression(self) -> Expression:
         """Multiplicative expression: 10 * 4 / 5"""
-        left = self.__parse_primary_expression()
+        next_level = self.__parse_unary_expression
+        left = next_level()
         while self.at()['value'] in ('/', '*', 'DIV', 'MOD'):
             operator = self.next_token()['value']
-            right = self.__parse_primary_expression()
+            right = next_level()
             left: BinaryExpr = BinaryExpr(
                 left=left, right=right, operator=operator)
 
         return left
+
+    def __parse_unary_expression(self) -> Expression:
+        tk: dict = self.next_token()
+        next_level = self.__parse_primary_expression
+        match tk['type']:
+            case 'NEG':
+                operator = tk['value']
+                right = next_level()
+                return UnaryExpr(operator=operator, right=right)
+
+            case _:
+                return next_level()
 
     def __parse_primary_expression(self) -> Expression:
         tk: dict = self.next_token()

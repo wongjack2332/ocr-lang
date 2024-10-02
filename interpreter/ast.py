@@ -107,6 +107,21 @@ class BinaryExpr(Expression):
         return self.node_type.node_type
 
 
+class UnaryExpr(Expression):
+    def __init__(self, operator: str = None, right: Expression = None) -> None:
+        super().__init__()
+        self.node_type = NodeType('UnaryExpr')
+        self.operator: str = operator
+        self.right = right
+
+    def get_type(self) -> str:
+        return {
+            'type': self.node_type.node_type,
+            'operator': self.operator,
+            'right': self.right
+        }
+
+
 class Identifier(Expression):
     """Identifier in AST"""
 
