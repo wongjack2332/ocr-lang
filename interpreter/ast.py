@@ -84,7 +84,8 @@ class BinaryExpr(Expression):
         self,
         left: Expression = None,
         right: Expression = None,
-        operator: str = None
+        operator: str = None,
+        binop_type: str = "NUMERIC"  # numberic, boolean
     ) -> None:
 
         super().__init__()
@@ -92,6 +93,7 @@ class BinaryExpr(Expression):
         self.left: Expression = left
         self.right: Expression = right
         self.operator: str = operator
+        self.binop_type = binop_type
 
     def fields(self) -> str:
         return {

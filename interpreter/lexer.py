@@ -12,8 +12,8 @@ class Lexer:
             'NAME': '[a-zA-Z_][a-zA-Z0-9_]*',
             'COMPARE': '==|!=|>|<|>=|<=',
             'COMMENT': r'//',
-            'ASSIGN': '=',
-            'OPERATION': r'\+|-|\*|\/|\^|MOD|DIV|AND|OR|NOT',
+            'ASSIGN': '=|',
+            'OPERATION': r'\+|-|\*|\/|\^',
             'NUMBER': r'[+-]?([0-9]*[.])?[0-9]+',
             'STRING': r'\".*?\"|\'.*?\'',
             'LPAREN': r'\(',
@@ -51,6 +51,11 @@ class Lexer:
             'endswitch': 'ENDSWITCH',
             'function': 'FUNCTION',
             'procedure': 'PROCEDURE',
+            'NOT': 'NEG',
+            'AND': 'LOGIC',
+            'OR': 'LOGIC',
+            'MOD': 'OPERATION',
+            'DIV': 'OPERATION',
         }
 
     def run(self) -> None:

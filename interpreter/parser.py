@@ -59,7 +59,7 @@ class Parser:
 
     def __parse_assignment_expression(self) -> Expression:
         tk: dict = self.at()
-        next_level = self.__parse_comparison_expression
+        next_level = self.__parse_logical_expression
         match tk['type']:
             case "NAME":
                 identifier = tk['value']
@@ -74,11 +74,23 @@ class Parser:
             case _:
                 return next_level()
 
+    def __parse_logical_expression(self) -> Expression:
+        next_level = self.__parse_comparison_expression
+        left = next_level()
+        while self.at()['type'] == "LOGIC":
+            operator = self.next_token()['value']
+            right = next_level()
+            left: BinaryExpr = BinaryExpr(
+                left=left, right=right, operator=operator, binop_type="BOOLEAN")
+
+        return left
+
     def __parse_comparison_expression(self) -> Expression:
-        left = self.__parse_additive_expression()
+        next_level = self.__parse_additive_expression
+        left = next_level()
         while self.at()['type'] == 'COMPARE':
             operator = self.next_token()['value']
-            right = self.__parse_additive_expression()
+            right = next_level()
             left: BinaryExpr = BinaryExpr(
                 left=left, right=right, operator=operator)
 
