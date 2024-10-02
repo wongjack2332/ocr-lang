@@ -1,7 +1,7 @@
 # value types
 from . import ValueType, RuntimeVal, NumberVal, NullVal, BoolVal
 # Expression types
-from . import BinaryExpr, Identifier, AssignmentExpr
+from . import BinaryExpr, Identifier, AssignmentExpr, UnaryExpr
 # statement types
 from . import NodeType, Statement, Program
 from . import Environment
@@ -34,6 +34,9 @@ def evaluate(astNode: Statement, env: Environment) -> RuntimeVal:
         case "AssignmentExpr":
             return evaluate_assignment_expr(astNode, env)
 
+        case "UnaryExpr":
+            return evaluate_unary_expression(astNode, env)
+
         case _:
             raise TypeError('Invalid AST node type ' + astNode.get_type())
 
@@ -58,7 +61,7 @@ def evaluate_binary_expression(binop: BinaryExpr, env: Environment) -> RuntimeVa
     return MK_NULL()
 
 
-def eval_boolean_binop(left: BoolVal, right: BoolVal, operator=str) -> RuntimeVal:
+def eval_boolean_binop(left: BoolVal, right: BoolVal, operator: str) -> RuntimeVal:
     match operator:
         case 'AND':
             return MK_BOOL(left.value and right.value)
@@ -100,16 +103,18 @@ def eval_numeric_binop(left: NumberVal, right: NumberVal, operator: str) -> Runt
         case '!=':
             return MK_BOOL(left.value != right.value)
 
-        # logical operators
-        case 'AND':
-            return MK_BOOL(left.value and right.value)
-
-        case 'OR':
-            return MK_BOOL(left.value or right.value)
         case _:
             pass
 
     return NumberVal(result)
+
+
+def evaluate_unary_expression(unop: UnaryExpr, env: Environment) -> RuntimeVal:
+    right = evaluate(unop.right, env)
+    match unop.operator:
+        case 'NOT':
+            print(type(right))
+            return MK_BOOL(not bool(right))
 
 
 def evaluate_identifier(identifier: Identifier, env: Environment) -> RuntimeVal:

@@ -1,4 +1,4 @@
-from . import Statement, Program, Expression, AssignmentExpr, BinaryExpr, Identifier, NumericLiteral, NodeType
+from . import Statement, Program, Expression, AssignmentExpr, BinaryExpr, UnaryExpr, Identifier, NumericLiteral, NodeType
 from . import Lexer
 
 
@@ -121,11 +121,12 @@ class Parser:
         return left
 
     def __parse_unary_expression(self) -> Expression:
-        tk: dict = self.next_token()
+        tk: dict = self.at()
         next_level = self.__parse_primary_expression
         match tk['type']:
             case 'NEG':
                 operator = tk['value']
+                self.next_token()
                 right = next_level()
                 return UnaryExpr(operator=operator, right=right)
 

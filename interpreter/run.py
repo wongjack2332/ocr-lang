@@ -1,5 +1,4 @@
 import sys
-from pprint import pprint
 
 from . import parse_text_from_file
 from . import Parser
@@ -15,7 +14,6 @@ def run_file(lines: str, env: Environment) -> None:
     program = parser.produce_ast(lines)
     result = evaluate(program, env)
     print(result)
-    # pprint(program.ast, sort_dicts=False, width=5)
     # print(program.build())
 
 

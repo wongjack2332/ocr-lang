@@ -114,12 +114,15 @@ class UnaryExpr(Expression):
         self.operator: str = operator
         self.right = right
 
-    def get_type(self) -> str:
+    def fields(self) -> str:
         return {
             'type': self.node_type.node_type,
             'operator': self.operator,
             'right': self.right
         }
+
+    def get_type(self) -> str:
+        return self.node_type.node_type
 
 
 class Identifier(Expression):

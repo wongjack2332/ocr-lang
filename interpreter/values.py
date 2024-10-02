@@ -34,6 +34,9 @@ class BoolVal(RuntimeVal):
     def __str__(self):
         return str(self.value)
 
+    def __bool__(self):
+        return self.value
+
 
 class NullVal(RuntimeVal):
     def __init__(self) -> None:
@@ -59,6 +62,7 @@ def MK_NUMBER(value: int = 0) -> NumberVal:
 
 def MK_NULL() -> NullVal:
     return NullVal()
+
 
 def MK_BOOL(value: bool = True) -> BoolVal:
     return BoolVal(value)

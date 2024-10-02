@@ -12,7 +12,7 @@ class Lexer:
             'NAME': '[a-zA-Z_][a-zA-Z0-9_]*',
             'COMPARE': '==|!=|>|<|>=|<=',
             'COMMENT': r'//',
-            'ASSIGN': '=|',
+            'ASSIGN': '=',
             'OPERATION': r'\+|-|\*|\/|\^',
             'NUMBER': r'[+-]?([0-9]*[.])?[0-9]+',
             'STRING': r'\".*?\"|\'.*?\'',
