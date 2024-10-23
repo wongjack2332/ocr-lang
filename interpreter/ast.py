@@ -15,6 +15,7 @@ class NodeType:
             'UnaryExpr',
             'CallExpr',
             'FunctionDeclaration',
+            'StringLiteral',
         )
 
         if node_type in available_types:
@@ -63,11 +64,12 @@ class Expression(Statement):
 class AssignmentExpr(Expression):
     """Assignment expression in AST"""
 
-    def __init__(self, left: str, right: Expression) -> None:
+    def __init__(self, left: str, right: Expression, i_type: str = "VAR") -> None:
         super().__init__()
         self.node_type = NodeType("AssignmentExpr")
         self.left: str = left
         self.right: Expression = right
+        self.i_type = i_type
 
     def fields(self) -> str:
         return {
@@ -150,6 +152,22 @@ class NumericLiteral(Expression):
         super().__init__()
         self.node_type = NodeType('NumericLiteral')
         self.value: int = value
+
+    def fields(self) -> str:
+        return {
+            'type': self.node_type.node_type,
+            'value': self.value
+        }
+
+    def get_type(self) -> str:
+        return self.node_type.node_type
+
+
+class StringLiteral(Expression):
+    def __init__(self, value: str = '') -> None:
+        super().__init__()
+        self.node_type = NodeType('StringLiteral')
+        self.value: str = value[1:-1]
 
     def fields(self) -> str:
         return {

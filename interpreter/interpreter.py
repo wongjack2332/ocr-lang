@@ -6,7 +6,7 @@ from . import BinaryExpr, Identifier, AssignmentExpr, UnaryExpr
 from . import NodeType, Statement, Program
 from . import Environment
 # value constructors
-from . import MK_NULL, MK_BOOL, MK_NUMBER
+from . import MK_NULL, MK_BOOL, MK_NUMBER, MK_STRING
 
 
 def evaluate_program(program: Program, env: Environment) -> RuntimeVal:
@@ -21,6 +21,9 @@ def evaluate(astNode: Statement, env: Environment) -> RuntimeVal:
     match astNode.get_type():
         case 'NumericLiteral':
             return NumberVal(value=astNode.value)
+
+        case 'StringLiteral':
+            return MK_STRING(astNode.value)
 
         case 'BinaryExpr':
             return evaluate_binary_expression(astNode, env)
@@ -44,6 +47,10 @@ def evaluate(astNode: Statement, env: Environment) -> RuntimeVal:
 def evaluate_assignment_expr(expr: AssignmentExpr, env: Environment) -> RuntimeVal:
     left_side = expr.left
     right_side: RuntimeVal = evaluate(expr.right, env)
+    if expr.i_type == "CONST":
+        print('hello')
+        right_side.set_const()
+
     env.assign_var(left_side, right_side)
 
     return right_side
@@ -89,7 +96,14 @@ def eval_numeric_binop(left: NumberVal, right: NumberVal, operator: str) -> Runt
         case 'DIV':
             result = left.value // right.value
 
-        # comparison operators
+        case _:
+            eval_comparison_expression(left, right, operator)
+
+    return NumberVal(result)
+
+
+def eval_comparison_expression(left, right, operator) -> BoolVal:
+    match operator:
         case '<':
             return MK_BOOL(left.value < right.value)
         case '>':
@@ -105,8 +119,6 @@ def eval_numeric_binop(left: NumberVal, right: NumberVal, operator: str) -> Runt
 
         case _:
             pass
-
-    return NumberVal(result)
 
 
 def evaluate_unary_expression(unop: UnaryExpr, env: Environment) -> RuntimeVal:

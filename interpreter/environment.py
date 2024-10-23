@@ -15,6 +15,11 @@ class Environment:
 
     def assign_var(self, varname: str, value: RuntimeVal) -> RuntimeVal:
         env = self.static_resolve(varname, env=self)
+        if env.variables.get(varname):
+            if env.variables[varname].is_const():
+                raise ValueError(f'Cannot modify value, Variable {
+                    varname} is constant')
+
         env.variables[varname] = value
 
         return value

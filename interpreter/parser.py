@@ -1,4 +1,4 @@
-from . import Statement, Program, Expression, AssignmentExpr, BinaryExpr, UnaryExpr, Identifier, NumericLiteral, NodeType
+from . import Statement, Program, Expression, AssignmentExpr, BinaryExpr, UnaryExpr, Identifier, NumericLiteral, StringLiteral, NodeType
 from . import Lexer
 
 
@@ -71,6 +71,19 @@ class Parser:
                     return AssignmentExpr(left=left, right=right)
 
                 return next_level()
+            case "CONST":
+                self.next_token()
+                identifier = self.at()['value']
+                if self.look_forward()['type'] == "ASSIGN":
+                    self.next_token()
+                    assign_operator = self.next_token()
+                    right: Expression = next_level()
+                    return AssignmentExpr(left=identifier, right=right, i_type="CONST")
+                else:
+                    raise RuntimeError(f"expected '=' operator, but found {
+                                       self.look_forward()['value']}")
+            case "GLOBAL":
+                pass
             case _:
                 return next_level()
 
@@ -147,6 +160,10 @@ class Parser:
                 numeric_literal = NumericLiteral()
                 numeric_literal.value = int(tk['value'])
                 return numeric_literal
+
+            case 'STRING':
+                string_literal = StringLiteral(value=tk['value'])
+                return string_literal
 
             case 'LPAREN':
                 value = self.__parse_expression()

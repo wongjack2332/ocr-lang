@@ -6,6 +6,7 @@ class ValueType:
         available_types = (
             'NULL',
             'NUMBER',
+            'STRING',
             'BOOLEAN'
         )
 
@@ -15,12 +16,22 @@ class ValueType:
 
 
 class RuntimeVal:
-    def __init__(self, value_type: str, value=None) -> None:
+    def __init__(self, value_type: str, value=None, access_type='NORM') -> None:
         self.value_type: ValueType = ValueType(value_type)
         self.value = value
+        self.access_type = access_type
 
     def get_type(self):
         return self.value_type.value_type
+
+    def get_access_type(self):
+        return self.access_type
+
+    def set_const(self):
+        self.access_type = 'CONST'
+
+    def is_const(self):
+        return self.access_type == 'CONST'
 
     def __str__(self):
         return str(self.value)
@@ -56,6 +67,12 @@ class NumberVal(RuntimeVal):
         return str(self.value)
 
 
+class StringVal(RuntimeVal):
+    def __init__(self, value: str = '') -> None:
+        super().__init__('STRING')
+        self.value: str = value
+
+
 def MK_NUMBER(value: int = 0) -> NumberVal:
     return NumberVal(value)
 
@@ -66,3 +83,7 @@ def MK_NULL() -> NullVal:
 
 def MK_BOOL(value: bool = True) -> BoolVal:
     return BoolVal(value)
+
+
+def MK_STRING(value: str = '') -> StringVal:
+    return StringVal(value)
