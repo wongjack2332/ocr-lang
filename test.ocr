@@ -1,2 +1,9 @@
-const a = 1
+a = 1
+if a == 1 then
 a = 2
+elseif a == 2 then
+a = 3
+else
+a = 4
+endif
+a

@@ -1,10 +1,13 @@
-from . import Statement, Program, Expression, AssignmentExpr, BinaryExpr, UnaryExpr, Identifier, NumericLiteral, StringLiteral, NodeType
+from . import Statement, Program
+from . import Expression, AssignmentExpr, BinaryExpr, UnaryExpr
+from . import Identifier, NumericLiteral, StringLiteral
+from . import Block, IfStatement, IfBlock, IfBlock, ForBlock, FuncBlock, WhileBlock, SwitchBlock, CaseBlock
 from . import Lexer
 
 
 class Parser:
     def __init__(self) -> None:
-        self.tokens: Lexer = None
+        self.tokens: Lexer | None = None
 
     def produce_ast(self, source) -> Program:
         self.tokens = Lexer(source)
@@ -14,7 +17,7 @@ class Parser:
 
         # parse until the end of file
         while not self.__eof():
-            program.body.append(self.__parse_statement())
+            program.body.append(self.__parse_next())
         # return AstBuilder(program)
         return program
 
@@ -35,11 +38,71 @@ class Parser:
         return self.tokens.next_token()
 
     def __eof(self) -> bool:
-        return self.tokens.tokens[0]['type'] == 'EOF'
+        return self.at()['type'] == 'EOF'
+
+    def __parse_next(self):
+        curr_token = self.at()
+
+        match curr_token['type']:
+            case 'IF':
+                return self.__parse_if_block()
+            case _:
+                return self.__parse_statement()
+    
+    def __parse_block(self, block: Block, terminators: tuple[str]):
+        while self.at()['type'] not in terminators:
+            block.body_append(self.__parse_next())
+        
+        
+
+    
+    def __parse_if_block(self):
+        if_block = IfBlock()
+        while self.at()['type'] != 'ENDIF':
+            curr_type = self.at()['type']
+            match curr_type: 
+                case 'IF':
+                    if_block.add_condition(self.__parse_if_statement(('ELSEIF', 'ENDIF')))
+                case 'ELSEIF':
+                    if_block.add_condition(self.__parse_if_statement(('ELSEIF', 'ELSE', 'ENDIF')))
+                case 'ELSE':
+                    if_block.add_condition(self.__parse_else_statement(('ENDIF',)))
+
+                case _:
+                    raise SyntaxError('Unable to find terminator of if-statement: missing elseif or endif')
+        
+        self.next_token() # discard 'ENDIF'
+        self.expect("NEWLINE", "Expected newline after endif")
+        
+        return if_block
 
     def __parse_statement(self) -> Statement:
-        # skip to parse expression
-        return self.__parse_expression()
+        parsed_expression = self.__parse_expression()
+        curr_token = self.at()
+        match curr_token['type']:
+            case 'NEWLINE':
+                self.next_token()
+                return parsed_expression
+            case 'EOF':
+                return parsed_expression
+        
+        raise SyntaxError(f'Expected newline or EOF instead of {curr_token["type"]}: {curr_token["value"]}')
+    
+    def __parse_if_statement(self, terminators: tuple = ("ELSEIF", "ELSE", "ENDIF")) -> IfStatement:
+        self.next_token() # discard 'IF'
+        condition = self.__parse_logical_expression()
+        self.expect('THEN', 'Expected "then"') # discard 'THEN'
+        self.expect('NEWLINE', 'Expected newline after "then"') # discard 'NEWLINE
+        if_statement = IfStatement(condition=condition)
+        self.__parse_block(if_statement, terminators)
+        return if_statement
+    
+    def __parse_else_statement(self, terminators: tuple = ("ENDIF",)):
+        self.next_token() # discard 'ELSE'
+        self.expect('NEWLINE', 'Expected newline after "else"') # discard 'NEWLINE
+        if_statement = IfStatement(condition=None)
+        self.__parse_block(if_statement, terminators)
+        return if_statement
 
     def __parse_expression(self) -> Expression:
         return self.__parse_assignment_expression()
@@ -80,8 +143,8 @@ class Parser:
                     right: Expression = next_level()
                     return AssignmentExpr(left=identifier, right=right, i_type="CONST")
                 else:
-                    raise RuntimeError(f"expected '=' operator, but found {
-                                       self.look_forward()['value']}")
+                    raise RuntimeError(f"""expected '=' operator, but found {
+                                       self.look_forward()['value']}""")
             case "GLOBAL":
                 pass
             case _:
@@ -169,10 +232,6 @@ class Parser:
                 value = self.__parse_expression()
                 self.expect('RPAREN', 'Expected ")"')
                 return value
-
-            case 'NEWLINE':
-                return self.__parse_statement()
-
             # case 'NULL':
             #     return NullLiteral()
             case _:

@@ -48,7 +48,6 @@ def evaluate_assignment_expr(expr: AssignmentExpr, env: Environment) -> RuntimeV
     left_side = expr.left
     right_side: RuntimeVal = evaluate(expr.right, env)
     if expr.i_type == "CONST":
-        print('hello')
         right_side.set_const()
 
     env.assign_var(left_side, right_side)

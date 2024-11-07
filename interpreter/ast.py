@@ -8,6 +8,9 @@ class NodeType:
         available_types = (
             'Statement',
             'Program',
+            'Block',
+            'IfBlock',
+            'IfStatement',
             'NumericLiteral',
             'AssignmentExpr',
             'Identifier',
@@ -44,7 +47,7 @@ class Program(Statement):
         self.node_type = NodeType('Program')
         self.body: list[Statement] = []
 
-    def fields(self) -> str:
+    def fields(self) -> dict: 
         return {'type': self.node_type.node_type, 'body': self.body}
 
     def get_type(self) -> str:
@@ -71,7 +74,7 @@ class AssignmentExpr(Expression):
         self.right: Expression = right
         self.i_type = i_type
 
-    def fields(self) -> str:
+    def fields(self) -> dict:
         return {
             "type": self.node_type.node_type,
             "left": self.left,
@@ -97,7 +100,7 @@ class BinaryExpr(Expression):
         self.operator: str = operator
         self.binop_type = binop_type
 
-    def fields(self) -> str:
+    def fields(self) -> dict:
         return {
             'type': self.node_type.node_type,
             'left': self.left,
@@ -116,7 +119,7 @@ class UnaryExpr(Expression):
         self.operator: str = operator
         self.right = right
 
-    def fields(self) -> str:
+    def fields(self) -> dict:
         return {
             'type': self.node_type.node_type,
             'operator': self.operator,
@@ -130,12 +133,12 @@ class UnaryExpr(Expression):
 class Identifier(Expression):
     """Identifier in AST"""
 
-    def __init__(self, symbol: str = None) -> None:
+    def __init__(self, symbol: str | None = None) -> None:
         super().__init__()
         self.node_type = NodeType('Identifier')
-        self.symbol: str = symbol
+        self.symbol: str | None = symbol
 
-    def fields(self) -> str:
+    def fields(self) -> dict:
         return {
             'type': self.node_type.node_type,
             'symbol': self.symbol
@@ -148,12 +151,12 @@ class Identifier(Expression):
 class NumericLiteral(Expression):
     """Numeric literal in AST"""
 
-    def __init__(self, value: int = None) -> None:
+    def __init__(self, value: int = 0) -> None:
         super().__init__()
         self.node_type = NodeType('NumericLiteral')
         self.value: int = value
 
-    def fields(self) -> str:
+    def fields(self) -> dict:
         return {
             'type': self.node_type.node_type,
             'value': self.value
@@ -169,7 +172,7 @@ class StringLiteral(Expression):
         self.node_type = NodeType('StringLiteral')
         self.value: str = value[1:-1]
 
-    def fields(self) -> str:
+    def fields(self) -> dict:
         return {
             'type': self.node_type.node_type,
             'value': self.value
