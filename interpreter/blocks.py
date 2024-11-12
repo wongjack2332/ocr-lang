@@ -12,6 +12,9 @@ class Block:
     
     def fields(self) -> dict:
         return {'type': self.node_type.node_type, 'body': self.body}
+    
+    def get_type(self) -> str:
+        return self.node_type.node_type
 
 
 
@@ -19,9 +22,13 @@ class IfStatement(Block):
     def __init__(self, condition) -> None:
         self.condition = condition
         super().__init__()
+        self.node_type = NodeType("IfStatement")
     
     def fields(self) -> dict:
         return {'type': self.node_type.node_type, 'condition': self.condition, 'body': self.body}
+
+    def get_type(self) -> str:
+        return self.node_type.node_type
 
 
 class IfBlock(Block):
@@ -34,8 +41,8 @@ class IfBlock(Block):
     def add_condition(self, condition: IfStatement):
         self.conditions.append(condition)
 
-    def get_next_condition(self) -> IfStatement | None:
-        if len(self.conditions) == 0:
+    def next_condition(self) -> IfStatement | None:
+        if len(self.conditions) != 0:
             condition = self.conditions[self.pointer]
             self.pointer += 1
             return condition
@@ -47,6 +54,8 @@ class IfBlock(Block):
     def fields(self) -> dict:
         return {'type': self.node_type.node_type, 'conditions': self.conditions}
 
+    def get_type(self) -> str:
+        return self.node_type.node_type
 
 class ForBlock(Block):
     def __init__(self, initialiser, limit, step) -> None:

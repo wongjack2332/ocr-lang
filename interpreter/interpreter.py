@@ -1,4 +1,7 @@
 # value types
+from typing import Any
+
+from . import Block, IfBlock, IfStatement
 from . import ValueType, RuntimeVal, NumberVal, NullVal, BoolVal
 # Expression types
 from . import BinaryExpr, Identifier, AssignmentExpr, UnaryExpr
@@ -9,7 +12,7 @@ from . import Environment
 from . import MK_NULL, MK_BOOL, MK_NUMBER, MK_STRING
 
 
-def evaluate_program(program: Program, env: Environment) -> RuntimeVal:
+def evaluate_program(program: Program | Block, env: Environment) -> RuntimeVal:
     last_evaluated: RuntimeVal = MK_NULL()
     for statement in program.body:
         last_evaluated = evaluate(statement, env)
@@ -19,6 +22,8 @@ def evaluate_program(program: Program, env: Environment) -> RuntimeVal:
 def evaluate(astNode: Statement, env: Environment) -> RuntimeVal:
     print(astNode.fields())
     match astNode.get_type():
+        case 'IfBlock':
+            return evaluate_if_block(astNode, env)
         case 'NumericLiteral':
             return NumberVal(value=astNode.value)
 
@@ -38,10 +43,23 @@ def evaluate(astNode: Statement, env: Environment) -> RuntimeVal:
             return evaluate_assignment_expr(astNode, env)
 
         case "UnaryExpr":
-            return evaluate_unary_expression(astNode, env)
+            return evaluate_unary_expression(astNode, env)        
 
         case _:
             raise TypeError('Invalid AST node type ' + astNode.get_type())
+
+def evaluate_if_block(if_block, env: Environment) -> Any:
+    if_block.reset_conditions()
+
+    while True:
+        curr_condition = if_block.next_condition()
+        if curr_condition.condition is None:
+            if_block.reset_conditions()
+            return evaluate_program(curr_condition, env)
+        if evaluate(curr_condition.condition, env):
+            return evaluate_program(curr_condition, env)
+
+    
 
 
 def evaluate_assignment_expr(expr: AssignmentExpr, env: Environment) -> RuntimeVal:
