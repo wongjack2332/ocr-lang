@@ -57,16 +57,29 @@ class IfBlock(Block):
     def get_type(self) -> str:
         return self.node_type.node_type
 
+
 class ForBlock(Block):
-    def __init__(self, initialiser, limit, step) -> None:
+    def __init__(self, initialiser, limit, step=None) -> None:
         super().__init__()
+        self.node_type = NodeType("ForBlock")
         self.initialiser = initialiser
         self.limit = limit
-        self.step = step
+        self.step = step or 1
 
     def next(self):
         self.initialiser += self.step
         return self.initialiser if self.initialiser < self.limit else None
+
+    def fields(self) -> dict:
+        return {
+            'type': self.node_type.node_type,
+            'initialiser': self.initialiser,
+            'limit': self.limit,
+            'step': self.step
+        }
+    
+    def get_type(self) -> str:
+        return self.node_type.node_type
 
 
 class WhileBlock(Block):

@@ -46,6 +46,8 @@ class Parser:
         match curr_token['type']:
             case 'IF':
                 return self.__parse_if_block()
+            case 'FOR':
+                return self.__parse_for_block()
             case _:
                 return self.__parse_statement()
     
@@ -53,7 +55,17 @@ class Parser:
         while self.at()['type'] not in terminators:
             block.body_append(self.__parse_next())
         
-        
+    def __parse_for_block(self) -> ForBlock:
+        self.next_token() # discard 'FOR'
+        initialiser = self.at()['value']
+        self.__parse_assignment_expression()
+        self.expect('TO', 'Expected "to"') # discard 'TO'
+        limit = self.__parse_expression()
+        for_block = ForBlock(initialiser, limit)
+
+        self.expect('NEWLINE', 'Expected newline after "for"') # discard 'NEWLINE'
+        self.__parse_block(for_block, ('NEXT',))
+        self.next_token() # discard 'NEXT'
 
     
     def __parse_if_block(self):
@@ -232,6 +244,10 @@ class Parser:
                 value = self.__parse_expression()
                 self.expect('RPAREN', 'Expected ")"')
                 return value
+            
+            case 'LSQBRACE':
+                value = self.__parse_expression()
+                self.expect('RSQBRACE', 'Expected "]"')
             # case 'NULL':
             #     return NullLiteral()
             case _:
