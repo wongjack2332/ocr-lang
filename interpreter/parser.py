@@ -58,14 +58,23 @@ class Parser:
     def __parse_for_block(self) -> ForBlock:
         self.next_token() # discard 'FOR'
         initialiser = self.at()['value']
-        self.__parse_assignment_expression()
+        initialising_expr = self.__parse_assignment_expression()
         self.expect('TO', 'Expected "to"') # discard 'TO'
         limit = self.__parse_expression()
         for_block = ForBlock(initialiser, limit)
+        for_block.initialising_expr = initialising_expr
 
+        if self.at()['type'] == 'STEP':
+            self.expect('STEP', 'Expected "step"') # discard 'STEP'
+            step = self.__parse_expression()
+            for_block.step = step
         self.expect('NEWLINE', 'Expected newline after "for"') # discard 'NEWLINE'
+        
         self.__parse_block(for_block, ('NEXT',))
         self.next_token() # discard 'NEXT'
+        self.__parse_expression()
+        self.expect('NEWLINE', 'Expected newline after "next _ "')
+        return for_block
 
     
     def __parse_if_block(self):

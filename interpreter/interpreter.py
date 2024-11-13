@@ -24,6 +24,8 @@ def evaluate(astNode: Statement, env: Environment) -> RuntimeVal:
     match astNode.get_type():
         case 'IfBlock':
             return evaluate_if_block(astNode, env)
+        case 'ForBlock':
+            return evaluate_for_block(astNode, env)
         case 'NumericLiteral':
             return NumberVal(value=astNode.value)
 
@@ -59,6 +61,12 @@ def evaluate_if_block(if_block, env: Environment) -> Any:
         if evaluate(curr_condition.condition, env):
             return evaluate_program(curr_condition, env)
 
+
+def evaluate_for_block(for_block, env: Environment) -> Any:
+    evaluate(for_block.initialising_expr, env)
+    while env.get_var(for_block.initialiser).value < for_block.limit.value:
+        evaluate_program(for_block, env)
+        env.assign_var(for_block.initialiser, MK_NUMBER(env.get_var(for_block.initialiser).value + (for_block.step.value or 1)))
     
 
 

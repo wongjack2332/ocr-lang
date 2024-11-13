@@ -1,5 +1,5 @@
 from typing import Self
-from . import NodeType, Statement, Expression
+from . import NodeType, Statement, Expression, AssignmentExpr
 
 
 class Block:
@@ -63,8 +63,9 @@ class ForBlock(Block):
         super().__init__()
         self.node_type = NodeType("ForBlock")
         self.initialiser = initialiser
+        self.initialising_expr: None | AssignmentExpr = None
         self.limit = limit
-        self.step = step or 1
+        self.step = step
 
     def next(self):
         self.initialiser += self.step

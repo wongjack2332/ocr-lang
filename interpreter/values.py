@@ -66,7 +66,6 @@ class NumberVal(RuntimeVal):
     def __str__(self):
         return str(self.value)
 
-
 class StringVal(RuntimeVal):
     def __init__(self, value: str = '') -> None:
         super().__init__('STRING')
