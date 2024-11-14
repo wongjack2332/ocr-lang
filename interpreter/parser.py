@@ -244,6 +244,10 @@ class Parser:
                 numeric_literal = NumericLiteral()
                 numeric_literal.value = int(tk['value'])
                 return numeric_literal
+            
+            case 'OPERATION':
+                if tk['value'] == '-':
+                    return BinaryExpr(left=NumericLiteral(value=0), operator='-', right=self.__parse_expression())
 
             case 'STRING':
                 string_literal = StringLiteral(value=tk['value'])

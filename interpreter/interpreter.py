@@ -64,7 +64,9 @@ def evaluate_if_block(if_block, env: Environment) -> Any:
 
 def evaluate_for_block(for_block, env: Environment) -> Any:
     evaluate(for_block.initialising_expr, env)
-    while env.get_var(for_block.initialiser).value < for_block.limit.value:
+    if isinstance(for_block.step, BinaryExpr):
+        for_block.step = evaluate(for_block.step, env)
+    while env.get_var(for_block.initialiser).value != for_block.limit.value:
         evaluate_program(for_block, env)
         env.assign_var(for_block.initialiser, MK_NUMBER(env.get_var(for_block.initialiser).value + (for_block.step.value or 1)))
     
