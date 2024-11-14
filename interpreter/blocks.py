@@ -76,7 +76,8 @@ class ForBlock(Block):
             'type': self.node_type.node_type,
             'initialiser': self.initialiser,
             'limit': self.limit,
-            'step': self.step
+            'step': self.step,
+            'body': self.body,
         }
     
     def get_type(self) -> str:
@@ -84,7 +85,20 @@ class ForBlock(Block):
 
 
 class WhileBlock(Block):
-    pass
+    def __init__(self, condition: Expression) -> None:
+        super().__init__()
+        self.node_type = NodeType("WhileBlock")
+        self.condition = condition
+    
+    def fields(self) -> dict:
+        return {
+            'type': self.node_type.node_type,
+            'condition': self.condition,
+            'body': self.body,
+        }
+    
+    def get_type(self) -> str:
+        return self.node_type.node_type
 
 
 class SwitchBlock(Block):

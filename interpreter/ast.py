@@ -12,6 +12,7 @@ class NodeType:
             'IfBlock',
             'IfStatement',
             'ForBlock',
+            'WhileBlock',
             'NumericLiteral',
             'AssignmentExpr',
             'Identifier',

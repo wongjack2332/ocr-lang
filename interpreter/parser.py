@@ -48,6 +48,8 @@ class Parser:
                 return self.__parse_if_block()
             case 'FOR':
                 return self.__parse_for_block()
+            case 'WHILE':
+                return self.__parse_while_block()
             case _:
                 return self.__parse_statement()
     
@@ -75,8 +77,17 @@ class Parser:
         self.__parse_expression()
         self.expect('NEWLINE', 'Expected newline after "next _ "')
         return for_block
-
     
+    def __parse_while_block(self) -> WhileBlock:
+        self.next_token() # discard 'WHILE'
+        condition = self.__parse_expression()
+        while_block = WhileBlock(condition)
+        self.expect('NEWLINE', 'Expected newline after "while"') # discard 'NEWLINE'
+        self.__parse_block(while_block, ('ENDWHILE',))
+        self.next_token() # discard 'ENDWHILE'
+        self.expect('NEWLINE', 'Expected newline after "endwhile"') # discard 'NEWLINE'
+        return while_block
+ 
     def __parse_if_block(self):
         if_block = IfBlock()
         while self.at()['type'] != 'ENDIF':
@@ -111,7 +122,7 @@ class Parser:
     
     def __parse_if_statement(self, terminators: tuple = ("ELSEIF", "ELSE", "ENDIF")) -> IfStatement:
         self.next_token() # discard 'IF'
-        condition = self.__parse_logical_expression()
+        condition = self.__parse_expression()
         self.expect('THEN', 'Expected "then"') # discard 'THEN'
         self.expect('NEWLINE', 'Expected newline after "then"') # discard 'NEWLINE
         if_statement = IfStatement(condition=condition)
