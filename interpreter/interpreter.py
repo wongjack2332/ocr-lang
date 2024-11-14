@@ -26,6 +26,9 @@ def evaluate(astNode: Statement, env: Environment) -> RuntimeVal:
             return evaluate_if_block(astNode, env)
         case 'ForBlock':
             return evaluate_for_block(astNode, env)
+        
+        case 'WhileBlock':
+            return evaluate_while_block(astNode, env)
         case 'NumericLiteral':
             return NumberVal(value=astNode.value)
 
@@ -69,6 +72,11 @@ def evaluate_for_block(for_block, env: Environment) -> Any:
     while env.get_var(for_block.initialiser).value != for_block.limit.value:
         evaluate_program(for_block, env)
         env.assign_var(for_block.initialiser, MK_NUMBER(env.get_var(for_block.initialiser).value + (for_block.step.value or 1)))
+
+
+def evaluate_while_block(while_block, env: Environment) -> Any:
+    while evaluate(while_block.condition, env):
+        evaluate_program(while_block, env)
     
 
 
@@ -124,7 +132,7 @@ def eval_numeric_binop(left: NumberVal, right: NumberVal, operator: str) -> Runt
             result = left.value // right.value
 
         case _:
-            eval_comparison_expression(left, right, operator)
+            return eval_comparison_expression(left, right, operator)
 
     return NumberVal(result)
 
