@@ -1,5 +1,8 @@
-a = 0 
-while a < 10
+function abc(c,)
+abc = abc + 1
+return abc
+endfunction
+
+procedure hello(a, b)
 a = a + 1
-endwhile
-a
+endprocedure

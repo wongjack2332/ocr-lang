@@ -16,12 +16,16 @@ def evaluate_program(program: Program | Block, env: Environment) -> RuntimeVal:
     last_evaluated: RuntimeVal = MK_NULL()
     for statement in program.body:
         last_evaluated = evaluate(statement, env)
+    
+    print(env.variables)
     return last_evaluated
 
 
 def evaluate(astNode: Statement, env: Environment) -> RuntimeVal:
     print(astNode.fields())
     match astNode.get_type():
+        case 'FuncBlock':
+            return evaluate_func_block(astNode, env)
         case 'IfBlock':
             return evaluate_if_block(astNode, env)
         case 'ForBlock':
@@ -52,6 +56,10 @@ def evaluate(astNode: Statement, env: Environment) -> RuntimeVal:
 
         case _:
             raise TypeError('Invalid AST node type ' + astNode.get_type())
+
+
+def evaluate_func_block(func_block, env: Environment) -> Any:
+    env.assign_var(func_block.name, func_block)
 
 def evaluate_if_block(if_block, env: Environment) -> Any:
     if_block.reset_conditions()

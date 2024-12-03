@@ -1,4 +1,4 @@
-from typing import Self
+from typing import Any, Self
 from . import NodeType, Statement, Expression, AssignmentExpr
 
 
@@ -110,4 +110,26 @@ class CaseBlock(Block):
 
 
 class FuncBlock(Block):
-    pass
+    def __init__(self, name: str, parameters: list[str] | None = None, body: list[Statement] | None = None, functype = 'FUNCTION', return_expr: Expression | None = None) -> None:
+        """
+        functypes: FUNCTION, PROCEDURE
+        """
+
+        super().__init__()
+        self.node_type = NodeType("FuncBlock")
+        self.name = name
+        self.parameters: list[str] | None = parameters
+        self.functype = functype
+        self.return_expr: Expression | None = return_expr
+    
+    def get_type(self) -> str:
+        return self.node_type.node_type
+    
+    def fields(self) -> dict:
+        return {
+            'type': self.node_type.node_type,
+            'name': self.name,
+            'parameters': self.parameters,
+            'body': self.body,
+            'return_expr': self.return_expr
+        }

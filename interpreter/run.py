@@ -32,12 +32,12 @@ def run_command() -> None:
     args = sys.argv
     if len(args) <= 1:
         print("no file found, interactive shell launched")
-        print("====shell=====")
+        print("====diddy=====")
         env = setup_env()
         while True:
             line = input('>>> ')
             if line == 'exit':
-                print("===shelled====")
+                print("===diddied====")
                 break
             run_file(line, env)
     else:

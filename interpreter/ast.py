@@ -12,6 +12,7 @@ class NodeType:
             'IfBlock',
             'IfStatement',
             'ForBlock',
+            'FuncBlock',
             'WhileBlock',
             'NumericLiteral',
             'AssignmentExpr',
@@ -62,6 +63,19 @@ class Expression(Statement):
     def __init__(self) -> None:
         super().__init__()
 
+    def get_type(self) -> str:
+        return self.node_type.node_type
+
+class ListExpression(Expression):
+    def __init__(self, elements: list[Expression] | None = None) -> None:
+        self.elements = elements
+    
+    def fields(self) -> dict:
+        return {
+            'type': self.node_type.node_type,
+            'elements': self.elements
+        }
+    
     def get_type(self) -> str:
         return self.node_type.node_type
 

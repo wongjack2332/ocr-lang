@@ -1,5 +1,5 @@
 from . import Statement, Program
-from . import Expression, AssignmentExpr, BinaryExpr, UnaryExpr
+from . import Expression, AssignmentExpr, BinaryExpr, UnaryExpr, ListExpression
 from . import Identifier, NumericLiteral, StringLiteral
 from . import Block, IfStatement, IfBlock, IfBlock, ForBlock, FuncBlock, WhileBlock, SwitchBlock, CaseBlock
 from . import Lexer
@@ -17,7 +17,10 @@ class Parser:
 
         # parse until the end of file
         while not self.__eof():
-            program.body.append(self.__parse_next())
+            parsed = self.__parse_next()
+
+            if parsed != -1:
+                program.body.append(parsed)
         # return AstBuilder(program)
         return program
 
@@ -30,7 +33,7 @@ class Parser:
     def expect(self, token_type: str, err: str) -> dict:
         prev = self.next_token()
         if not prev or prev['type'] != token_type:
-            raise EOFError(f'{err}, instead found "{prev["value"]}"')
+            raise SyntaxError(f'{err}, instead found "{prev["value"]}"')
 
         return prev
 
@@ -50,6 +53,13 @@ class Parser:
                 return self.__parse_for_block()
             case 'WHILE':
                 return self.__parse_while_block()
+            case 'FUNCTION':
+                return self.__parse_func_block('FUNCTION')
+            case 'PROCEDURE':
+                return self.__parse_func_block('PROCEDURE')
+            case 'NEWLINE':
+                self.next_token()
+                return -1 # code for: this is nothing
             case _:
                 return self.__parse_statement()
     
@@ -107,6 +117,36 @@ class Parser:
         self.expect("NEWLINE", "Expected newline after endif")
         
         return if_block
+    
+    def __parse_func_block(self, functype):
+        self.next_token() # discard 'FUNCTION' or 'PROCEDURE'
+        name = self.expect('NAME', 'Expected function name')['value']
+        self.expect('LPAREN', 'Expected "("') # discard 'LPAREN'
+        parameters = self.__parse_list_expression()
+        self.expect('RPAREN', 'Expected ")"') # discard 'RPAREN'
+        self.expect('NEWLINE', 'Expected newline after function header') # discard 'NEWLINE'
+        func_block = FuncBlock(name=name, parameters = parameters)
+        self.__parse_block(func_block, terminators=('END'+functype, 'RETURN'))
+        if self.at()['type'] == 'RETURN': # discard "RETURN"
+            if functype == "PROCEDURE": # procedure cannot return a value
+                raise SyntaxError("Procedure cannot return a value")
+            self.next_token()
+            return_expr = self.__parse_expression() # parse return expression
+            func_block.return_expr = return_expr
+            print(self.at())
+            if self.at()['type'] == "EOF":
+                raise SyntaxError(f'Expected subroutine terminator(end{functype.lower()}), instead unexpected EOF')
+            next_token = self.next_token()
+        self.expect('END'+functype, 'Expected end'+functype.lower()) # discard 'END'+functype
+        curr = self.at()['type']
+        if curr != "EOF":
+            if curr != "NEWLINE":
+                raise SyntaxError(f'Expected newline or EOF instead of {curr}: {self.at()["value"]}')
+            
+            self.next_token()
+
+        return func_block
+        
 
     def __parse_statement(self) -> Statement:
         parsed_expression = self.__parse_expression()
@@ -151,6 +191,20 @@ class Parser:
     Unary Expr
     Primary Expr
     """
+
+    def __parse_list_expression(self, terminator: str = 'RPAREN') -> ListExpression:
+        elems = []
+        while True:
+            elems.append(self.__parse_expression())
+            if self.at()['type'] == terminator:
+                break
+            self.expect('COMMA', 'Expected ","')
+            if self.at()['type'] == terminator:
+                break
+        
+        list_expr = ListExpression(elements = elems)
+        return list_expr
+
 
     def __parse_assignment_expression(self) -> Expression:
         tk: dict = self.at()
