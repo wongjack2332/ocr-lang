@@ -1,5 +1,5 @@
 from . import Statement, Program
-from . import Expression, AssignmentExpr, BinaryExpr, UnaryExpr, ListExpression
+from . import Expression, AssignmentExpr, BinaryExpr, UnaryExpr, ListExpression, FunctionCall
 from . import Identifier, NumericLiteral, StringLiteral
 from . import Block, IfStatement, IfBlock, IfBlock, ForBlock, FuncBlock, WhileBlock, SwitchBlock, CaseBlock
 from . import Lexer
@@ -104,7 +104,7 @@ class Parser:
             curr_type = self.at()['type']
             match curr_type: 
                 case 'IF':
-                    if_block.add_condition(self.__parse_if_statement(('ELSEIF', 'ENDIF')))
+                    if_block.add_condition(self.__parse_if_statement(('ELSEIF', 'ELSE', 'ENDIF')))
                 case 'ELSEIF':
                     if_block.add_condition(self.__parse_if_statement(('ELSEIF', 'ELSE', 'ENDIF')))
                 case 'ELSE':
@@ -122,7 +122,8 @@ class Parser:
         self.next_token() # discard 'FUNCTION' or 'PROCEDURE'
         name = self.expect('NAME', 'Expected function name')['value']
         self.expect('LPAREN', 'Expected "("') # discard 'LPAREN'
-        parameters = self.__parse_list_expression()
+        parameters = self.__parse_parameters()
+        print(parameters)
         self.expect('RPAREN', 'Expected ")"') # discard 'RPAREN'
         self.expect('NEWLINE', 'Expected newline after function header') # discard 'NEWLINE'
         func_block = FuncBlock(name=name, parameters = parameters)
@@ -192,6 +193,17 @@ class Parser:
     Primary Expr
     """
 
+    def __parse_parameters(self) -> list[str]:
+        params = []
+        while True:
+            params.append(self.next_token()['value'])
+            if self.at()['type'] == 'RPAREN':
+                break
+            self.expect('COMMA', 'Expected ","')
+            if self.at()['type'] == 'RPAREN':
+                break
+        
+        return params
     def __parse_list_expression(self, terminator: str = 'RPAREN') -> ListExpression:
         elems = []
         while True:
@@ -213,13 +225,26 @@ class Parser:
             case "NAME":
                 identifier = tk['value']
                 left = identifier
-                if self.look_forward()['type'] == "ASSIGN":
-                    self.next_token()
-                    assign_operator = self.next_token()
-                    right: Expression = next_level()
-                    return AssignmentExpr(left=left, right=right)
+                match self.look_forward()['type']:
+                    case "ASSIGN":
+                        self.next_token()
+                        assign_operator = self.next_token()
+                        right: Expression = next_level()
+                        return AssignmentExpr(left=left, right=right)
+                    
+                    case "LPAREN": # function call
+                        self.next_token() # discard name
+                        self.next_token() # discard LPAREN
+                        args = self.__parse_list_expression(terminator="RPAREN")
+                        self.next_token() # discard RPAREN
+                        return FunctionCall(name=left, arguments=args)
 
-                return next_level()
+                    case "DOT": # member access
+                        pass
+
+                    case _:
+                        return next_level()
+
             case "CONST":
                 self.next_token()
                 identifier = self.at()['value']

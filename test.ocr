@@ -1,8 +1,14 @@
 function abc(c,)
-abc = abc + 1
-return abc
+if 1 == 1 then
+c = c + 1
+else
+c = 0
+endif
+return c 
 endfunction
 
 procedure hello(a, b)
 a = a + 1
 endprocedure
+
+abc(1)

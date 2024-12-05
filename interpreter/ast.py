@@ -16,6 +16,8 @@ class NodeType:
             'WhileBlock',
             'NumericLiteral',
             'AssignmentExpr',
+            'ListExpression',
+            'FunctionCall',
             'Identifier',
             'BinaryExpr',
             'UnaryExpr',
@@ -66,8 +68,25 @@ class Expression(Statement):
     def get_type(self) -> str:
         return self.node_type.node_type
 
+
+class FunctionCall(Expression):
+    def __init__(self, name, arguments) -> None:
+        super().__init__()
+        self.node_type = NodeType('FunctionCall')
+        self.name = name
+        self.arguments = arguments
+    
+    def fields(self) -> dict:
+        return {
+            'type': self.node_type.node_type,
+            'name': self.name,
+            'arguments': self.arguments
+        }
+
 class ListExpression(Expression):
     def __init__(self, elements: list[Expression] | None = None) -> None:
+        super().__init__()
+        self.node_type = NodeType('ListExpression')
         self.elements = elements
     
     def fields(self) -> dict:

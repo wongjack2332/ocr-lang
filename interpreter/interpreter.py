@@ -12,6 +12,9 @@ from . import Environment
 from . import MK_NULL, MK_BOOL, MK_NUMBER, MK_STRING
 
 
+# TODO: create some sort of expected type to prevent passing in wrong types, e.g. functions names into expression evalutions
+
+
 def evaluate_program(program: Program | Block, env: Environment) -> RuntimeVal:
     last_evaluated: RuntimeVal = MK_NULL()
     for statement in program.body:
@@ -33,6 +36,12 @@ def evaluate(astNode: Statement, env: Environment) -> RuntimeVal:
         
         case 'WhileBlock':
             return evaluate_while_block(astNode, env)
+        
+        case 'ListExpression':
+            return evaluate_list_expression(astNode, env)
+        
+        case 'FunctionCall':
+            return evaluate_function_call(astNode, env)
         case 'NumericLiteral':
             return NumberVal(value=astNode.value)
 
@@ -72,7 +81,6 @@ def evaluate_if_block(if_block, env: Environment) -> Any:
         if evaluate(curr_condition.condition, env):
             return evaluate_program(curr_condition, env)
 
-
 def evaluate_for_block(for_block, env: Environment) -> Any:
     evaluate(for_block.initialising_expr, env)
     if isinstance(for_block.step, BinaryExpr):
@@ -97,6 +105,33 @@ def evaluate_assignment_expr(expr: AssignmentExpr, env: Environment) -> RuntimeV
     env.assign_var(left_side, right_side)
 
     return right_side
+
+
+def evaluate_function_call(function_call, env: Environment) -> RuntimeVal | None:
+    func_name = function_call.name
+    func_block = env.get_var(func_name)
+
+    if func_block.get_type() != "FuncBlock":
+        raise RuntimeError(f"name {func_name} is not a function")
+    
+    arguments = evaluate_list_expression(function_call.arguments, env)
+    return evaluate_function(func_block, arguments, env)
+
+
+def evaluate_function(func_block, arguments, env:Environment):
+    parameters = func_block.parameters
+    if len(parameters) != len(arguments):
+        raise RuntimeError(f"Incorrect amount of arguments, expected {len(parameters)}, got {len(arguments)}")
+    
+    new_env = Environment(parent=env)
+    for param, arg in zip(parameters, arguments):
+        new_env.assign_var(varname=param, value=arg)
+    evaluate_program(func_block, new_env)
+    return evaluate(func_block.return_expr, new_env)
+#TODO
+
+def evaluate_list_expression(list_expr, env: Environment) -> list:
+    return [evaluate(arg, env) for arg in list_expr.elements]
 
 
 def evaluate_binary_expression(binop: BinaryExpr, env: Environment) -> RuntimeVal:
@@ -124,7 +159,7 @@ def eval_boolean_binop(left: BoolVal, right: BoolVal, operator: str) -> RuntimeV
 
 
 def eval_numeric_binop(left: NumberVal, right: NumberVal, operator: str) -> RuntimeVal:
-    result = 0
+    result = 0 
     match operator:
         case '+':
             result = left.value + right.value

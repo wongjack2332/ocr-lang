@@ -6,6 +6,7 @@ from . import evaluate
 from . import Environment
 from . import NumberVal
 from . import MK_NUMBER, MK_NULL, MK_BOOL
+from . import get_default_modules
 
 
 def run_file(lines: str, env: Environment) -> None:
@@ -19,8 +20,10 @@ def run_file(lines: str, env: Environment) -> None:
 
 def setup_env() -> Environment:
     """Setup environment"""
+    default_modules = get_default_modules()
     env = Environment()
-    env.declare_var('x', MK_NUMBER(100))
+    for key, value in default_modules.items():
+        env.declare_var(key, value)
     env.declare_var('None', MK_NULL())
     env.declare_var('true', MK_BOOL(True))
     env.declare_var('false', MK_BOOL(False))

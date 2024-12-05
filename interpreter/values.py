@@ -7,7 +7,8 @@ class ValueType:
             'NULL',
             'NUMBER',
             'STRING',
-            'BOOLEAN'
+            'BOOLEAN',
+            'EXT_FUNC_NAME'
         )
 
         if value_type in available_types:
@@ -70,6 +71,11 @@ class StringVal(RuntimeVal):
     def __init__(self, value: str = '') -> None:
         super().__init__('STRING')
         self.value: str = value
+
+class ExtFuncName(RuntimeVal):
+    def __init__(self, value: str = '') -> None:
+        super().__init__('EXT_FUNC_NAME')
+        self.value: str = value # name of function in python 
 
 
 def MK_NUMBER(value: int = 0) -> NumberVal:
