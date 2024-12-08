@@ -1,8 +1,10 @@
+from interpreter.ast import ArrayAssignmentExpr
 from . import Statement, Program
 from . import Expression, AssignmentExpr, BinaryExpr, UnaryExpr, ListExpression, FunctionCall
 from . import Identifier, NumericLiteral, StringLiteral
 from . import Block, IfStatement, IfBlock, IfBlock, ForBlock, FuncBlock, WhileBlock, SwitchBlock, CaseBlock
 from . import Lexer
+from . import ArrayAssignmentExpr
 
 
 class Parser:
@@ -220,47 +222,68 @@ class Parser:
         list_expr = ListExpression(elements = elems)
         return list_expr
 
+    def __parse_name(self, i_type="VAR"):
+        next_level = self.__parse_logical_expression
+        tk = self.at()
+        match tk['type']:
+            case "ARRAY":
+                self.next_token() # discard ARRAY
+                name = self.expect("NAME", "Expected array name")['value']
+                self.expect("LSQBRACE", "Expected '['") # discard LSQBRACE
+                index = int(self.expect("NUMBER", "Expected array index")['value'])
+                self.expect("RSQBRACE", "Expected ']'") # discard RSQBRACE
+                if self.at()['type'] == "ASSIGN":
+                    self.expect("ASSIGN", "Expected '='")
+                    self.expect("LSQBRACE", "Expected '['") # discard LSQBRACE
+                    right = self.__parse_list_expression("RSQBRACE")
+                    self.expect("RSQBRACE", "Expected ']'")
+                else:
+                    right = None
+                
+                return ArrayAssignmentExpr(left=name, length=index, right=right)
+
+            case _:
+                pass
+        identifier = tk['value']
+        left = identifier
+        match self.look_forward()['type']:
+
+            case "ASSIGN":
+                self.next_token()
+                assign_operator = self.next_token()
+                right: Expression = next_level()
+                return AssignmentExpr(left=left, right=right, i_type=i_type)
+            
+            case "LPAREN": # function call
+                self.next_token() # discard name
+                self.next_token() # discard LPAREN
+                args = self.__parse_list_expression(terminator="RPAREN")
+                self.next_token() # discard RPAREN
+                return FunctionCall(name=left, arguments=args)
+
+            case "DOT": # member access
+                pass
+
+            case _:
+                return next_level()
+
 
     def __parse_assignment_expression(self) -> Expression:
         tk: dict = self.at()
         next_level = self.__parse_logical_expression
         match tk['type']:
             case "NAME":
-                identifier = tk['value']
-                left = identifier
-                match self.look_forward()['type']:
-                    case "ASSIGN":
-                        self.next_token()
-                        assign_operator = self.next_token()
-                        right: Expression = next_level()
-                        return AssignmentExpr(left=left, right=right)
-                    
-                    case "LPAREN": # function call
-                        self.next_token() # discard name
-                        self.next_token() # discard LPAREN
-                        args = self.__parse_list_expression(terminator="RPAREN")
-                        self.next_token() # discard RPAREN
-                        return FunctionCall(name=left, arguments=args)
-
-                    case "DOT": # member access
-                        pass
-
-                    case _:
-                        return next_level()
+                return self.__parse_name()
+            
+            case "ARRAY":
+                return self.__parse_name()
 
             case "CONST":
                 self.next_token()
-                identifier = self.at()['value']
-                if self.look_forward()['type'] == "ASSIGN":
-                    self.next_token()
-                    assign_operator = self.next_token()
-                    right: Expression = next_level()
-                    return AssignmentExpr(left=identifier, right=right, i_type="CONST")
-                else:
-                    raise RuntimeError(f"""expected '=' operator, but found {
-                                       self.look_forward()['value']}""")
+                return self.__parse_name(i_type="CONST")
             case "GLOBAL":
-                pass
+                self.next_token()
+                return self.__parse_name(i_type="GLOBAL")
             case _:
                 return next_level()
 
@@ -329,7 +352,6 @@ class Parser:
         match tk['type']:
             case 'NAME':
                 if self.at()['type'] == 'LPAREN':
-                    print("bosh")
                     self.next_token() # discard LPAREN
                     args = self.__parse_list_expression(terminator="RPAREN")
                     self.next_token() # discard RPAREN
@@ -359,7 +381,7 @@ class Parser:
                 return value
             
             case 'LSQBRACE':
-                value = self.__parse_expression()
+                value = self.__parse_list_expression(terminator="RSQBRACE")
                 self.expect('RSQBRACE', 'Expected "]"')
             # case 'NULL':
             #     return NullLiteral()

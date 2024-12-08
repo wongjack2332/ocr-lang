@@ -1,3 +1,6 @@
+from typing import Any
+
+
 class ValueType:
     def __init__(self, value_type: str) -> None:
         self.value_type = self.__parse_type(value_type)
@@ -8,9 +11,9 @@ class ValueType:
             'NUMBER',
             'STRING',
             'BOOLEAN',
-            'EXT_FUNC_NAME'
+            'EXT_FUNC_NAME',
+            'LIST'
         )
-
         if value_type in available_types:
             return value_type
         raise ValueError(f'Invalid value type: {value_type}')
@@ -80,6 +83,18 @@ class ExtFuncName(RuntimeVal):
     def get_type(self) -> str:
         return 'EXT_FUNC_NAME'
 
+class ListVal(RuntimeVal):
+    def __init__(self, value: list[Any]=[]) -> None:
+        super().__init__('LIST')
+        self.value: list[Any] = value
+    
+    def __str__(self) -> str:
+        s = str(list(map(lambda x: x.value, self.value)))
+        return s
+
+
+def MK_LIST(value: list[Any]=[]) -> ListVal:
+    return ListVal(value)
 
 def MK_NUMBER(value: int = 0) -> NumberVal:
     return NumberVal(value)

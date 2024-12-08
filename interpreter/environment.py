@@ -16,12 +16,19 @@ class Environment:
     def assign_var(self, varname: str, value: RuntimeVal) -> RuntimeVal:
         if self.variables.get(varname):
             if self.variables[varname].is_const():
-                raise ValueError(f'Cannot modify value, Variable {
-                    varname} is constant')
-
+                raise ValueError(f'Cannot modify value, Variable {varname} is constant')
         self.variables[varname] = value
 
         return value
+    
+    def assign_global_var(self, varname: str, value: RuntimeVal) -> RuntimeVal:
+        env = self.get_global_scope()
+        env.assign_var(varname, value)
+    
+    def get_global_scope(self):
+        if self.parent is None:
+            return self
+        return self.parent.get_global_scope()
 
     def get_var(self, varname: str) -> RuntimeVal:
         env = self.resolve(varname)

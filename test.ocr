@@ -1,4 +1,5 @@
-a = input("enter your name: ")
-if a == "jack" OR a == "hello" then
+array a[5] = [1,2,3,4,5]
 print(a)
-endif
+
+array b[5]
+print(b)

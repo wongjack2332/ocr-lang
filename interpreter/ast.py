@@ -16,6 +16,7 @@ class NodeType:
             'WhileBlock',
             'NumericLiteral',
             'AssignmentExpr',
+            'ArrayAssignmentExpr',
             'ListExpression',
             'FunctionCall',
             'Identifier',
@@ -88,6 +89,7 @@ class ListExpression(Expression):
         super().__init__()
         self.node_type = NodeType('ListExpression')
         self.elements = elements
+        self.length: int = len(self.elements)
     
     def fields(self) -> dict:
         return {
@@ -115,6 +117,23 @@ class AssignmentExpr(Expression):
             "left": self.left,
             "right": self.right
         }
+
+class ArrayAssignmentExpr(Expression):
+    """Array Assignment expression in AST"""
+
+    def __init__(self, left: str, length: int = 0, right: ListExpression | None = None, i_type="VAR") -> None:
+        super().__init__()
+        self.node_type = NodeType("ArrayAssignmentExpr")
+        self.left: str = left
+        self.length: int = length
+        self.i_type: str = i_type
+        if right is None:
+            self.right: ListExpression = ListExpression(elements=[Identifier(symbol="None")] * length)
+        else:
+            if right.length != length:
+                raise IndexError("Length of array assignment expression does not match length of array")
+            self.right: ListExpression = right
+
 
 
 class BinaryExpr(Expression):

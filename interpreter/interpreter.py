@@ -9,7 +9,7 @@ from . import BinaryExpr, Identifier, AssignmentExpr, UnaryExpr
 from . import NodeType, Statement, Program
 from . import Environment
 # value constructors
-from . import MK_NULL, MK_BOOL, MK_NUMBER, MK_STRING
+from . import MK_NULL, MK_BOOL, MK_NUMBER, MK_STRING, MK_LIST
 
 
 
@@ -60,6 +60,9 @@ def evaluate(astNode: Statement, env: Environment) -> RuntimeVal:
 
         case "AssignmentExpr":
             return evaluate_assignment_expr(astNode, env)
+        
+        case "ArrayAssignmentExpr":
+            return evaluate_assignment_expr(astNode, env)
 
         case "UnaryExpr":
             return evaluate_unary_expression(astNode, env)        
@@ -101,13 +104,21 @@ def evaluate_while_block(while_block, env: Environment) -> Any:
 
 def evaluate_assignment_expr(expr: AssignmentExpr, env: Environment) -> RuntimeVal:
     left_side = expr.left
-    right_side: RuntimeVal = evaluate(expr.right, env)
+    evaluation: RuntimeVal | list[Any] = evaluate(expr.right, env)
+    if isinstance(evaluation, RuntimeVal):
+        right_side = evaluation
+    else:
+        right_side = MK_LIST(evaluation)
     if expr.i_type == "CONST":
         right_side.set_const()
-
-    env.assign_var(left_side, right_side)
+        env.assign_var(left_side, right_side)
+    elif expr.i_type == "GLOBAL":
+        env.assign_global_var(left_side, right_side)
+    else:
+        env.assign_var(left_side, right_side)
 
     return right_side
+
 
 
 def evaluate_function_call(function_call, env: Environment) -> RuntimeVal | None:

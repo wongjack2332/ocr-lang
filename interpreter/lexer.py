@@ -27,6 +27,7 @@ class Lexer:
 
         self.keywords = {
             'const': 'CONST',
+            'array': "ARRAY",
             'global': 'GLOBAL',
             'array': 'ARRAY',
             'for': 'FOR',
