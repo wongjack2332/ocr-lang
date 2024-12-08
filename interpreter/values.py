@@ -76,6 +76,9 @@ class ExtFuncName(RuntimeVal):
     def __init__(self, value: str = '') -> None:
         super().__init__('EXT_FUNC_NAME')
         self.value: str = value # name of function in python 
+    
+    def get_type(self) -> str:
+        return 'EXT_FUNC_NAME'
 
 
 def MK_NUMBER(value: int = 0) -> NumberVal:

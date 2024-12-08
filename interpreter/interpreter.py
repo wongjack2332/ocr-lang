@@ -12,7 +12,9 @@ from . import Environment
 from . import MK_NULL, MK_BOOL, MK_NUMBER, MK_STRING
 
 
+
 # TODO: create some sort of expected type to prevent passing in wrong types, e.g. functions names into expression evalutions
+# TODO: input str(runtime defined strings currently are not converted into our string lits)
 
 
 def evaluate_program(program: Program | Block, env: Environment) -> RuntimeVal:
@@ -20,7 +22,6 @@ def evaluate_program(program: Program | Block, env: Environment) -> RuntimeVal:
     for statement in program.body:
         last_evaluated = evaluate(statement, env)
     
-    print(env.variables)
     return last_evaluated
 
 
@@ -75,6 +76,8 @@ def evaluate_if_block(if_block, env: Environment) -> Any:
 
     while True:
         curr_condition = if_block.next_condition()
+        if curr_condition is None:
+            return MK_NULL()
         if curr_condition.condition is None:
             if_block.reset_conditions()
             return evaluate_program(curr_condition, env)
@@ -111,11 +114,26 @@ def evaluate_function_call(function_call, env: Environment) -> RuntimeVal | None
     func_name = function_call.name
     func_block = env.get_var(func_name)
 
-    if func_block.get_type() != "FuncBlock":
+    if func_block.get_type() not in ("FuncBlock", "EXT_FUNC_NAME"):
         raise RuntimeError(f"name {func_name} is not a function")
     
     arguments = evaluate_list_expression(function_call.arguments, env)
-    return evaluate_function(func_block, arguments, env)
+
+    if func_block.get_type() == "EXT_FUNC_NAME":
+        evaluation = func_block.value(*arguments)
+        if type(evaluation) == int:
+            return MK_NUMBER(evaluation)
+        elif type(evaluation) == bool:
+            return MK_BOOL(evaluation)
+        elif type(evaluation) == str:
+            return MK_STRING(evaluation)
+        elif evaluation is None:
+            return MK_NULL() 
+        else:
+            return evaluation
+        
+    evaluation = evaluate_function(func_block, arguments, env)
+    return evaluation
 
 
 def evaluate_function(func_block, arguments, env:Environment):

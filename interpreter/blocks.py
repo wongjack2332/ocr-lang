@@ -42,7 +42,7 @@ class IfBlock(Block):
         self.conditions.append(condition)
 
     def next_condition(self) -> IfStatement | None:
-        if len(self.conditions) != 0:
+        if self.pointer != len(self.conditions):
             condition = self.conditions[self.pointer]
             self.pointer += 1
             return condition

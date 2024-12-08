@@ -6,5 +6,5 @@ from .utils import *
 from .interpreter import *
 from .lexer import Lexer
 from .parser import Parser
-from .run import *
 from .default_modules import get_default_modules
+from .run import *

@@ -43,6 +43,12 @@ class Parser:
     def __eof(self) -> bool:
         return self.at()['type'] == 'EOF'
 
+    def new_line_or_eof(self):
+        curr = self.at()['type']
+        if curr != "EOF":
+            if curr != "NEWLINE":
+                raise SyntaxError(f'Expected newline or EOF instead of {curr}: {self.at()["value"]}')
+            self.next_token()
     def __parse_next(self):
         curr_token = self.at()
 
@@ -114,7 +120,7 @@ class Parser:
                     raise SyntaxError('Unable to find terminator of if-statement: missing elseif or endif')
         
         self.next_token() # discard 'ENDIF'
-        self.expect("NEWLINE", "Expected newline after endif")
+        self.new_line_or_eof()
         
         return if_block
     
@@ -139,12 +145,8 @@ class Parser:
                 raise SyntaxError(f'Expected subroutine terminator(end{functype.lower()}), instead unexpected EOF')
             next_token = self.next_token()
         self.expect('END'+functype, 'Expected end'+functype.lower()) # discard 'END'+functype
-        curr = self.at()['type']
-        if curr != "EOF":
-            if curr != "NEWLINE":
-                raise SyntaxError(f'Expected newline or EOF instead of {curr}: {self.at()["value"]}')
+        self.new_line_or_eof()
             
-            self.next_token()
 
         return func_block
         
@@ -152,6 +154,7 @@ class Parser:
     def __parse_statement(self) -> Statement:
         parsed_expression = self.__parse_expression()
         curr_token = self.at()
+        print(curr_token)
         match curr_token['type']:
             case 'NEWLINE':
                 self.next_token()
@@ -325,6 +328,13 @@ class Parser:
 
         match tk['type']:
             case 'NAME':
+                if self.at()['type'] == 'LPAREN':
+                    print("bosh")
+                    self.next_token() # discard LPAREN
+                    args = self.__parse_list_expression(terminator="RPAREN")
+                    self.next_token() # discard RPAREN
+                    return FunctionCall(name=tk['value'], arguments=args)
+                    
                 identifier = Identifier()
                 identifier.symbol = tk['value']
 
