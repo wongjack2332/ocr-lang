@@ -87,10 +87,36 @@ class ListVal(RuntimeVal):
     def __init__(self, value: list[Any]=[]) -> None:
         super().__init__('LIST')
         self.value: list[Any] = value
-    
+        self.length = len(self.value)
+
+    def get_index(self, index: int) -> Any:
+        if index >= self.length:
+            raise IndexError("INDEX IS TOO LARGE, INDEX =", index)
+        
+        return self.value[index]
+            
+    def set_index(self, index: int, value: Any) -> None:
+        if index >= self.length:
+            raise IndexError("Index out of range, index =", index)
+        
+        self.value[index] = value
+     
     def __str__(self) -> str:
-        s = str(list(map(lambda x: x.value, self.value)))
+        def get_list_str(lst):
+            s = "["
+            for i in lst:
+                if isinstance(i, list):
+                    s += get_list_str(i) + ","
+                    continue
+                s += str(i) + ","
+            s += "]"
+            return s
+        
+        s = get_list_str(self.value)
         return s
+    
+    def get_type(self) -> str:
+        return "LIST_VAL"
 
 
 def MK_LIST(value: list[Any]=[]) -> ListVal:

@@ -20,6 +20,7 @@ class NodeType:
             'ListExpression',
             'FunctionCall',
             'Identifier',
+            'ArrayIndex',
             'BinaryExpr',
             'UnaryExpr',
             'CallExpr',
@@ -200,6 +201,26 @@ class Identifier(Expression):
 
     def get_type(self) -> str:
         return self.node_type.node_type
+
+class ArrayIndex(Expression):
+    def __init__(self, array: str, index: Expression, right = None, assign=True):
+        super().__init__()
+        self.node_type = NodeType("ArrayIndex")
+        self.array: str = array
+        self.index: Expression = index
+        self.right = right
+        self.assign = assign
+    
+    def get_type(self) -> str:
+        return self.node_type.node_type
+    
+    def fields(self) -> dict:
+        return {
+            "type": self.node_type.node_type,
+            "array": self.array,
+            "index": self.index,
+            "right": self.right
+        }
 
 
 class NumericLiteral(Expression):

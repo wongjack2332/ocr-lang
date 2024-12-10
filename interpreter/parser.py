@@ -1,7 +1,7 @@
 from interpreter.ast import ArrayAssignmentExpr
 from . import Statement, Program
-from . import Expression, AssignmentExpr, BinaryExpr, UnaryExpr, ListExpression, FunctionCall
-from . import Identifier, NumericLiteral, StringLiteral
+from . import Expression, AssignmentExpr, BinaryExpr, UnaryExpr, ListExpression, FunctionCall 
+from . import Identifier, NumericLiteral, StringLiteral, ArrayIndex
 from . import Block, IfStatement, IfBlock, IfBlock, ForBlock, FuncBlock, WhileBlock, SwitchBlock, CaseBlock
 from . import Lexer
 from . import ArrayAssignmentExpr
@@ -14,7 +14,6 @@ class Parser:
     def produce_ast(self, source) -> Program:
         self.tokens = Lexer(source)
         self.tokens.run()
-        self.tokens.print_tokens()
         program: Program = Program()
 
         # parse until the end of file
@@ -93,7 +92,7 @@ class Parser:
         self.__parse_block(for_block, ('NEXT',))
         self.next_token() # discard 'NEXT'
         self.__parse_expression()
-        self.expect('NEWLINE', 'Expected newline after "next _ "')
+        self.new_line_or_eof()
         return for_block
     
     def __parse_while_block(self) -> WhileBlock:
@@ -103,7 +102,7 @@ class Parser:
         self.expect('NEWLINE', 'Expected newline after "while"') # discard 'NEWLINE'
         self.__parse_block(while_block, ('ENDWHILE',))
         self.next_token() # discard 'ENDWHILE'
-        self.expect('NEWLINE', 'Expected newline after "endwhile"') # discard 'NEWLINE'
+        self.new_line_or_eof()
         return while_block
  
     def __parse_if_block(self):
@@ -156,7 +155,6 @@ class Parser:
     def __parse_statement(self) -> Statement:
         parsed_expression = self.__parse_expression()
         curr_token = self.at()
-        print(curr_token)
         match curr_token['type']:
             case 'NEWLINE':
                 self.next_token()
@@ -260,6 +258,22 @@ class Parser:
                 args = self.__parse_list_expression(terminator="RPAREN")
                 self.next_token() # discard RPAREN
                 return FunctionCall(name=left, arguments=args)
+            
+            case "LSQBRACE": # array access
+                self.next_token() # discard NAME
+                self.next_token()
+                index = next_level()
+                self.expect("RSQBRACE", "Expected ']'") # discard RSQBRACE
+                curr = self.at()['type']
+                assign = False
+                right = None
+                if curr == "ASSIGN":
+                    self.next_token()
+                    right = self.__parse_expression()
+                    assign = True
+                return ArrayIndex(array=left, index=index, right=right, assign=assign)
+
+
 
             case "DOT": # member access
                 pass
@@ -383,6 +397,7 @@ class Parser:
             case 'LSQBRACE':
                 value = self.__parse_list_expression(terminator="RSQBRACE")
                 self.expect('RSQBRACE', 'Expected "]"')
+                return value
             # case 'NULL':
             #     return NullLiteral()
             case _:

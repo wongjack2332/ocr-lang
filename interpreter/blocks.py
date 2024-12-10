@@ -1,4 +1,6 @@
 from typing import Any, Self
+
+from interpreter.ast import NumericLiteral
 from . import NodeType, Statement, Expression, AssignmentExpr
 
 
@@ -65,7 +67,7 @@ class ForBlock(Block):
         self.initialiser = initialiser
         self.initialising_expr: None | AssignmentExpr = None
         self.limit = limit
-        self.step = step
+        self.step = step or NumericLiteral(value=1)
 
     def next(self):
         self.initialiser += self.step

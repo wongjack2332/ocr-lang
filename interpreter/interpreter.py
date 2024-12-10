@@ -1,10 +1,11 @@
 # value types
+from re import L
 from typing import Any
 
 from . import Block, IfBlock, IfStatement
-from . import ValueType, RuntimeVal, NumberVal, NullVal, BoolVal
+from . import ValueType, RuntimeVal, NumberVal, NullVal, BoolVal, ListVal
 # Expression types
-from . import BinaryExpr, Identifier, AssignmentExpr, UnaryExpr
+from . import BinaryExpr, Identifier, AssignmentExpr, UnaryExpr, ArrayIndex
 # statement types
 from . import NodeType, Statement, Program
 from . import Environment
@@ -21,12 +22,10 @@ def evaluate_program(program: Program | Block, env: Environment) -> RuntimeVal:
     last_evaluated: RuntimeVal = MK_NULL()
     for statement in program.body:
         last_evaluated = evaluate(statement, env)
-    
     return last_evaluated
 
 
 def evaluate(astNode: Statement, env: Environment) -> RuntimeVal:
-    print(astNode.fields())
     match astNode.get_type():
         case 'FuncBlock':
             return evaluate_func_block(astNode, env)
@@ -63,6 +62,9 @@ def evaluate(astNode: Statement, env: Environment) -> RuntimeVal:
         
         case "ArrayAssignmentExpr":
             return evaluate_assignment_expr(astNode, env)
+        
+        case "ArrayIndex":
+            return evaluate_array_index(astNode, env)
 
         case "UnaryExpr":
             return evaluate_unary_expression(astNode, env)        
@@ -73,6 +75,7 @@ def evaluate(astNode: Statement, env: Environment) -> RuntimeVal:
 
 def evaluate_func_block(func_block, env: Environment) -> Any:
     env.assign_var(func_block.name, func_block)
+    return MK_NULL()
 
 def evaluate_if_block(if_block, env: Environment) -> Any:
     if_block.reset_conditions()
@@ -94,11 +97,15 @@ def evaluate_for_block(for_block, env: Environment) -> Any:
     while env.get_var(for_block.initialiser).value != for_block.limit.value:
         evaluate_program(for_block, env)
         env.assign_var(for_block.initialiser, MK_NUMBER(env.get_var(for_block.initialiser).value + (for_block.step.value or 1)))
+    
+    return MK_NULL()
 
 
 def evaluate_while_block(while_block, env: Environment) -> Any:
     while evaluate(while_block.condition, env):
         evaluate_program(while_block, env)
+
+    return MK_NULL()
     
 
 
@@ -119,7 +126,24 @@ def evaluate_assignment_expr(expr: AssignmentExpr, env: Environment) -> RuntimeV
 
     return right_side
 
+def evaluate_array_index(expr: ArrayIndex, env: Environment) -> RuntimeVal:
+    array = env.get_var(expr.array)
+    if not isinstance(array, ListVal):
+        raise RuntimeError(f"Name {expr.array} is not an array") 
 
+    index = evaluate(expr.index, env)
+    if not isinstance(index, NumberVal):
+        raise RuntimeError(f"Index {expr.index} is not valid, index={index}")
+
+    if not expr.assign:
+        return array.get_index(index.value)
+
+    right = evaluate(expr.right, env)
+    if isinstance(right, list):
+        right = MK_LIST(right)
+
+    array.set_index(index, right)
+    return array
 
 def evaluate_function_call(function_call, env: Environment) -> RuntimeVal | None:
     func_name = function_call.name
@@ -131,7 +155,7 @@ def evaluate_function_call(function_call, env: Environment) -> RuntimeVal | None
     arguments = evaluate_list_expression(function_call.arguments, env)
 
     if func_block.get_type() == "EXT_FUNC_NAME":
-        evaluation = func_block.value(*arguments)
+        evaluation = func_block.value(*arguments.value)
         if type(evaluation) == int:
             return MK_NUMBER(evaluation)
         elif type(evaluation) == bool:
@@ -160,7 +184,7 @@ def evaluate_function(func_block, arguments, env:Environment):
 #TODO
 
 def evaluate_list_expression(list_expr, env: Environment) -> list:
-    return [evaluate(arg, env) for arg in list_expr.elements]
+    return MK_LIST([evaluate(arg, env) for arg in list_expr.elements])
 
 
 def evaluate_binary_expression(binop: BinaryExpr, env: Environment) -> RuntimeVal:
