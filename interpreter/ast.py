@@ -23,6 +23,7 @@ class NodeType:
             'ArrayIndex',
             'BinaryExpr',
             'UnaryExpr',
+            'MemberExpr',
             'CallExpr',
             'FunctionDeclaration',
             'StringLiteral',
@@ -134,6 +135,26 @@ class ArrayAssignmentExpr(Expression):
             if right.length != length:
                 raise IndexError("Length of array assignment expression does not match length of array")
             self.right: ListExpression = right
+        
+
+class MemberExpr(Expression):
+    def __init__(self, name: str, method: str, arguments: ListExpression) -> None:
+        super().__init__()
+        self.node_type = NodeType('MemberExpr')
+        self.name = name
+        self.method = method
+        self.arguments = arguments
+    
+    def fields(self) -> dict:
+        return {
+            'type': self.node_type.node_type,
+            'name': self.name,
+            'method': self.method,
+            'arguments': self.arguments
+        }
+    
+    def get_type(self) -> str:
+        return super().get_type()
 
 
 

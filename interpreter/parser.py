@@ -1,6 +1,6 @@
 from interpreter.ast import ArrayAssignmentExpr
 from . import Statement, Program
-from . import Expression, AssignmentExpr, BinaryExpr, UnaryExpr, ListExpression, FunctionCall 
+from . import Expression, AssignmentExpr, BinaryExpr, UnaryExpr, ListExpression, FunctionCall, MemberExpr
 from . import Identifier, NumericLiteral, StringLiteral, ArrayIndex
 from . import Block, IfStatement, IfBlock, IfBlock, ForBlock, FuncBlock, WhileBlock, SwitchBlock, CaseBlock
 from . import Lexer
@@ -209,6 +209,8 @@ class Parser:
         return params
     def __parse_list_expression(self, terminator: str = 'RPAREN') -> ListExpression:
         elems = []
+        if self.at()['type'] == terminator:
+            return ListExpression(elements=elems)
         while True:
             elems.append(self.__parse_expression())
             if self.at()['type'] == terminator:
@@ -276,11 +278,17 @@ class Parser:
 
 
             case "DOT": # member access
-                pass
+                self.next_token() # discard NAME
+                self.next_token() # discard DOT
+                method = self.next_token()['value']
+                self.expect("LPAREN", "Expected '('") # discard LPAREN)
+                args = self.__parse_list_expression(terminator="RPAREN")
+                self.expect("RPAREN", "Expected ')'") # discard RPAREN
+                expr = MemberExpr(name=left, method=method, arguments=args) 
+                return expr
 
             case _:
                 return next_level()
-
 
     def __parse_assignment_expression(self) -> Expression:
         tk: dict = self.at()
@@ -300,7 +308,7 @@ class Parser:
                 return self.__parse_name(i_type="GLOBAL")
             case _:
                 return next_level()
-
+    
     def __parse_logical_expression(self) -> Expression:
         next_level = self.__parse_comparison_expression
         left = next_level()

@@ -11,7 +11,7 @@ class ValueType:
             'NUMBER',
             'STRING',
             'BOOLEAN',
-            'EXT_FUNC_NAME',
+            'EXT_NAME',
             'LIST'
         )
         if value_type in available_types:
@@ -74,14 +74,38 @@ class StringVal(RuntimeVal):
     def __init__(self, value: str = '') -> None:
         super().__init__('STRING')
         self.value: str = value
+        self.length = len(self.value)
+    
+    def get_index(self, index: int) -> Any:
+        if index >= self.length:
+            raise IndexError(f"INDEX IS TOO LARGE, INDEX = {index}, LENGTH = {self.length}")
+        
 
-class ExtFuncName(RuntimeVal):
+        return self.value[index]
+    
+    def __add__(self, other):
+        return MK_STRING(self.value + other.value)
+    
+    def __repr__(self) -> str:
+        return self.value
+
+
+class ExtName(RuntimeVal):
     def __init__(self, value: str = '') -> None:
-        super().__init__('EXT_FUNC_NAME')
+        super().__init__('EXT_NAME')
         self.value: str = value # name of function in python 
     
     def get_type(self) -> str:
-        return 'EXT_FUNC_NAME'
+        return 'EXT_NAME'
+
+
+class ObjectVal(RuntimeVal):
+    def __init__(self, value: object) -> None:
+        super().__init__('OBJECT')
+        self.value: object = value
+    
+    def get_type(self) -> str:
+        return self.value.get_name()
 
 class ListVal(RuntimeVal):
     def __init__(self, value: list[Any]=[]) -> None:
@@ -91,13 +115,13 @@ class ListVal(RuntimeVal):
 
     def get_index(self, index: int) -> Any:
         if index >= self.length:
-            raise IndexError("INDEX IS TOO LARGE, INDEX =", index)
+            raise IndexError(f"INDEX IS TOO LARGE, INDEX = {index}, LENGTH = {self.length}")
         
         return self.value[index]
             
     def set_index(self, index: int, value: Any) -> None:
         if index >= self.length:
-            raise IndexError("Index out of range, index =", index)
+            raise IndexError(f"INDEX IS TOO LARGE, INDEX = {index}, LENGTH = {self.length}")
         
         self.value[index] = value
      
@@ -136,3 +160,10 @@ def MK_BOOL(value: bool = True) -> BoolVal:
 
 def MK_STRING(value: str = '') -> StringVal:
     return StringVal(value)
+
+
+def is_iterable(value: RuntimeVal) -> bool:
+    return 'get_index' in dir(value)
+
+def is_mutable_iterable(value: RuntimeVal) -> bool:
+    return 'set_index' in dir(value)

@@ -2,20 +2,21 @@
 from re import L
 from typing import Any
 
+
+
 from . import Block, IfBlock, IfStatement
 from . import ValueType, RuntimeVal, NumberVal, NullVal, BoolVal, ListVal
 # Expression types
-from . import BinaryExpr, Identifier, AssignmentExpr, UnaryExpr, ArrayIndex
+from . import BinaryExpr, Identifier, AssignmentExpr, UnaryExpr, ArrayIndex, MemberExpr, ListExpression
 # statement types
 from . import NodeType, Statement, Program
 from . import Environment
 # value constructors
-from . import MK_NULL, MK_BOOL, MK_NUMBER, MK_STRING, MK_LIST
+from . import MK_NULL, MK_BOOL, MK_NUMBER, MK_STRING, MK_LIST, is_iterable, is_mutable_iterable
 
 
 
 # TODO: create some sort of expected type to prevent passing in wrong types, e.g. functions names into expression evalutions
-# TODO: input str(runtime defined strings currently are not converted into our string lits)
 
 
 def evaluate_program(program: Program | Block, env: Environment) -> RuntimeVal:
@@ -68,6 +69,9 @@ def evaluate(astNode: Statement, env: Environment) -> RuntimeVal:
 
         case "UnaryExpr":
             return evaluate_unary_expression(astNode, env)        
+        
+        case "MemberExpr":
+            return evaluate_member_expr(astNode, env)
 
         case _:
             raise TypeError('Invalid AST node type ' + astNode.get_type())
@@ -126,10 +130,25 @@ def evaluate_assignment_expr(expr: AssignmentExpr, env: Environment) -> RuntimeV
 
     return right_side
 
+
+def evaluate_member_expr(expr: MemberExpr, env: Environment) -> RuntimeVal:
+    object_ = env.get_var(expr.name)
+    method = expr.method
+    arguments = evaluate_list_expression(expr.arguments, env)
+    if "method_set" in dir(object_):
+        method_set = object_.method_set
+    else:
+        raise TypeError(f"Method set not available for {expr.name}")
+    
+    if method not in method_set:
+        raise NameError(f"Method {method} not found in object {expr.name}")
+    
+    return method_set[method](*arguments.value)
+
 def evaluate_array_index(expr: ArrayIndex, env: Environment) -> RuntimeVal:
     array = env.get_var(expr.array)
-    if not isinstance(array, ListVal):
-        raise RuntimeError(f"Name {expr.array} is not an array") 
+    if not is_iterable(array):
+        raise TypeError(f"Name {expr.array} is not an iterable") 
 
     index = evaluate(expr.index, env)
     if not isinstance(index, NumberVal):
@@ -137,6 +156,9 @@ def evaluate_array_index(expr: ArrayIndex, env: Environment) -> RuntimeVal:
 
     if not expr.assign:
         return array.get_index(index.value)
+    
+    if not is_mutable_iterable(array):
+        raise TypeError(f"Name {expr.array} is not a mutable iterable")
 
     right = evaluate(expr.right, env)
     if isinstance(right, list):
@@ -149,13 +171,13 @@ def evaluate_function_call(function_call, env: Environment) -> RuntimeVal | None
     func_name = function_call.name
     func_block = env.get_var(func_name)
 
-    if func_block.get_type() not in ("FuncBlock", "EXT_FUNC_NAME"):
-        raise RuntimeError(f"name {func_name} is not a function")
+    if func_block.get_type() not in ("FuncBlock", "EXT_NAME"):
+        raise RuntimeError(f"name {func_name} is not a callable")
     
-    arguments = evaluate_list_expression(function_call.arguments, env)
+    arguments: ListVal = evaluate_list_expression(function_call.arguments, env)
 
-    if func_block.get_type() == "EXT_FUNC_NAME":
-        evaluation = func_block.value(*arguments.value)
+    if func_block.get_type() == "EXT_NAME":
+        evaluation = func_block.value(*(arguments.value))
         if type(evaluation) == int:
             return MK_NUMBER(evaluation)
         elif type(evaluation) == bool:
@@ -173,17 +195,17 @@ def evaluate_function_call(function_call, env: Environment) -> RuntimeVal | None
 
 def evaluate_function(func_block, arguments, env:Environment):
     parameters = func_block.parameters
-    if len(parameters) != len(arguments):
+    if len(parameters) != arguments.length:
         raise RuntimeError(f"Incorrect amount of arguments, expected {len(parameters)}, got {len(arguments)}")
     
     new_env = Environment(parent=env)
-    for param, arg in zip(parameters, arguments):
+    for param, arg in zip(parameters, arguments.value):
         new_env.assign_var(varname=param, value=arg)
     evaluate_program(func_block, new_env)
     return evaluate(func_block.return_expr, new_env)
 #TODO
 
-def evaluate_list_expression(list_expr, env: Environment) -> list:
+def evaluate_list_expression(list_expr: ListExpression, env: Environment) -> ListVal:
     return MK_LIST([evaluate(arg, env) for arg in list_expr.elements])
 
 
