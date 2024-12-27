@@ -14,4 +14,6 @@
 
 ## disclaimer
 - this is unfinished, like REALLY UNFINISHED
+- the basics of the language is now implemented
+- however, mind that there are still missing features, e.g. string and array manipulation(i.e. you can't know the length of anything), and there are no casting yet.
 
