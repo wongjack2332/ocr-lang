@@ -65,7 +65,7 @@ class NullVal(RuntimeVal):
 class NumberVal(RuntimeVal):
     def __init__(self, value: int = 0) -> None:
         super().__init__('NUMBER')
-        self.value: int = value
+        self.value: int | float = value
 
     def __str__(self):
         return str(self.value)
@@ -146,7 +146,7 @@ class ListVal(RuntimeVal):
 def MK_LIST(value: list[Any]=[]) -> ListVal:
     return ListVal(value)
 
-def MK_NUMBER(value: int = 0) -> NumberVal:
+def MK_NUMBER(value: int | float = 0) -> NumberVal:
     return NumberVal(value)
 
 

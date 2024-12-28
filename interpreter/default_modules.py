@@ -2,7 +2,8 @@
 In this file we define default modules for the interpreter
 """
 import random
-from . import StringVal, RuntimeVal, MK_STRING
+
+from . import StringVal, RuntimeVal, NumberVal, MK_STRING, MK_NUMBER, MK_BOOL
 def get_default_modules() -> dict:
     modules = {
         "print": print,
@@ -10,11 +11,36 @@ def get_default_modules() -> dict:
         "input": input,
         "open": lambda x: FileHandler(x),
         "newFile": newFile,
+        "str": lambda x: cast_type("string", x),
+        "int": lambda x: cast_type("int", x),
+        "float": lambda x: cast_type("float", x),
+        "real": lambda x: cast_type("float", x),
+        "bool": lambda x: cast_type("bool", x)
     }
 
     return modules
 
 
+def cast_type(datatype: str, value: RuntimeVal) -> RuntimeVal:
+    match datatype:
+        case "int":
+            if not isinstance(value, StringVal):
+                raise TypeError(f"cannot convert string {value} to int")
+            return MK_NUMBER(int(value.value))
+        
+        case "float":
+            if not (isinstance(value, StringVal) or isinstance(value, NumberVal)):
+                raise TypeError(f"cannot convert {value} to float")
+            
+            return MK_NUMBER(float(value.value))
+
+        case "string":
+            if isinstance(value, StringVal):
+                return value
+            return MK_STRING(str(value.value))
+        
+        case "bool":
+            return MK_BOOL(bool(value.value))
 
 
 def newFile(filename: StringVal = StringVal("")):

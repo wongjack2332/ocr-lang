@@ -1,4 +1,0 @@
-file = open("test.txt")
-for i=0 to 5
-print(file.readLine())
-next i
