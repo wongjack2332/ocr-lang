@@ -90,7 +90,7 @@ class ListExpression(Expression):
     def __init__(self, elements: list[Expression] | None = None) -> None:
         super().__init__()
         self.node_type = NodeType('ListExpression')
-        self.elements = elements
+        self.elements = elements or list()
         self.length: int = len(self.elements)
     
     def fields(self) -> dict:
@@ -138,23 +138,25 @@ class ArrayAssignmentExpr(Expression):
         
 
 class MemberExpr(Expression):
-    def __init__(self, name: str, method: str, arguments: ListExpression) -> None:
+    def __init__(self, name: str, method: str, arguments: ListExpression, is_attribute = False) -> None:
         super().__init__()
         self.node_type = NodeType('MemberExpr')
         self.name = name
         self.method = method
         self.arguments = arguments
+        self.is_attribute = is_attribute
     
     def fields(self) -> dict:
         return {
             'type': self.node_type.node_type,
             'name': self.name,
             'method': self.method,
-            'arguments': self.arguments
+            'arguments': self.arguments,
+            'is_attribute': self.is_attribute
         }
     
     def get_type(self) -> str:
-        return super().get_type()
+        return self.node_type.node_type
 
 
 

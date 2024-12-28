@@ -281,7 +281,11 @@ class Parser:
                 self.next_token() # discard NAME
                 self.next_token() # discard DOT
                 method = self.next_token()['value']
-                self.expect("LPAREN", "Expected '('") # discard LPAREN)
+                at = self.at()
+                if at['type'] == "LPAREN": # method
+                   self.next_token() 
+                else:
+                    return MemberExpr(name=left, method = method, arguments=ListExpression(elements=None), is_attribute=True)
                 args = self.__parse_list_expression(terminator="RPAREN")
                 self.expect("RPAREN", "Expected ')'") # discard RPAREN
                 expr = MemberExpr(name=left, method=method, arguments=args) 

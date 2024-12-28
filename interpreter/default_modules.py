@@ -7,7 +7,7 @@ from . import StringVal, RuntimeVal, NumberVal, MK_STRING, MK_NUMBER, MK_BOOL
 def get_default_modules() -> dict:
     modules = {
         "print": print,
-        "random": random.randint,
+        "random": lambda x, y: random.randint(x.value, y.value),
         "input": input,
         "open": lambda x: FileHandler(x),
         "newFile": newFile,
@@ -15,7 +15,9 @@ def get_default_modules() -> dict:
         "int": lambda x: cast_type("int", x),
         "float": lambda x: cast_type("float", x),
         "real": lambda x: cast_type("float", x),
-        "bool": lambda x: cast_type("bool", x)
+        "bool": lambda x: cast_type("bool", x),
+        "ASC": StringVal.ASC,
+        "CHR": StringVal.CHR
     }
 
     return modules

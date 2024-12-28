@@ -134,6 +134,15 @@ def evaluate_assignment_expr(expr: AssignmentExpr, env: Environment) -> RuntimeV
 def evaluate_member_expr(expr: MemberExpr, env: Environment) -> RuntimeVal:
     object_ = env.get_var(expr.name)
     method = expr.method
+    if expr.is_attribute:
+        if not hasattr(object_, "attribute_set"):
+            raise TypeError(f"Attribute set not available for {expr.name}")
+        
+        if method not in object_.attribute_set:
+            raise NameError(f"Attribute {method} not found in object {expr.name}")
+        
+        return object_.attribute_set[method]
+
     arguments = evaluate_list_expression(expr.arguments, env)
     if "method_set" in dir(object_):
         method_set = object_.method_set

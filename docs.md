@@ -74,8 +74,8 @@ _ + _ concats
 .upper()
 .lower()
 
-ASC()
-CHR() -> ASCII of character inputted
+ASC(c)
+CHR(c) -> ASCII of character inputted
 
 # files
 open(filename)
