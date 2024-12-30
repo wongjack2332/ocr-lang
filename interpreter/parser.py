@@ -72,7 +72,10 @@ class Parser:
     
     def __parse_block(self, block: Block, terminators: tuple[str]):
         while self.at()['type'] not in terminators:
-            block.body_append(self.__parse_next())
+            res = self.__parse_next()
+            if res == -1:
+                continue
+            block.body_append(res)
         
     def __parse_for_block(self) -> ForBlock:
         self.next_token() # discard 'FOR'
@@ -252,44 +255,7 @@ class Parser:
                 self.next_token()
                 assign_operator = self.next_token()
                 right: Expression = next_level()
-                return AssignmentExpr(left=left, right=right, i_type=i_type)
-            
-            case "LPAREN": # function call
-                self.next_token() # discard name
-                self.next_token() # discard LPAREN
-                args = self.__parse_list_expression(terminator="RPAREN")
-                self.next_token() # discard RPAREN
-                return FunctionCall(name=left, arguments=args)
-            
-            case "LSQBRACE": # array access
-                self.next_token() # discard NAME
-                self.next_token()
-                index = next_level()
-                self.expect("RSQBRACE", "Expected ']'") # discard RSQBRACE
-                curr = self.at()['type']
-                assign = False
-                right = None
-                if curr == "ASSIGN":
-                    self.next_token()
-                    right = self.__parse_expression()
-                    assign = True
-                return ArrayIndex(array=left, index=index, right=right, assign=assign)
-
-
-
-            case "DOT": # member access
-                self.next_token() # discard NAME
-                self.next_token() # discard DOT
-                method = self.next_token()['value']
-                at = self.at()
-                if at['type'] == "LPAREN": # method
-                   self.next_token() 
-                else:
-                    return MemberExpr(name=left, method = method, arguments=ListExpression(elements=None), is_attribute=True)
-                args = self.__parse_list_expression(terminator="RPAREN")
-                self.expect("RPAREN", "Expected ')'") # discard RPAREN
-                expr = MemberExpr(name=left, method=method, arguments=args) 
-                return expr
+                return AssignmentExpr(left=left, right=right, i_type=i_type) 
 
             case _:
                 return next_level()
@@ -349,7 +315,7 @@ class Parser:
 
     def __parse_multiplicative_expression(self) -> Expression:
         """Multiplicative expression: 10 * 4 / 5"""
-        next_level = self.__parse_unary_expression
+        next_level = self.__parse_dot_expression
         left = next_level()
         while self.at()['value'] in ('/', '*', 'DIV', 'MOD'):
             operator = self.next_token()['value']
@@ -357,6 +323,23 @@ class Parser:
             left: BinaryExpr = BinaryExpr(
                 left=left, right=right, operator=operator)
 
+        return left
+    
+    def __parse_dot_expression(self) -> Expression:
+        next_level = self.__parse_unary_expression
+        left = next_level()
+        while self.at()['value'] == '.':
+            self.next_token() # discard DOT
+            method = self.next_token()['value']
+            at = self.at()
+            if at['type'] == "LPAREN": # method
+                self.next_token() 
+            else:
+                return MemberExpr(name=left, method = method, arguments=ListExpression(elements=None), is_attribute=True)
+            args = self.__parse_list_expression(terminator="RPAREN")
+            self.expect("RPAREN", "Expected ')'") # discard RPAREN
+            expr = MemberExpr(name=left, method=method, arguments=args) 
+            return expr
         return left
 
     def __parse_unary_expression(self) -> Expression:
@@ -377,12 +360,21 @@ class Parser:
 
         match tk['type']:
             case 'NAME':
-                if self.at()['type'] == 'LPAREN':
-                    self.next_token() # discard LPAREN
-                    args = self.__parse_list_expression(terminator="RPAREN")
-                    self.next_token() # discard RPAREN
-                    return FunctionCall(name=tk['value'], arguments=args)
+                at = self.at()
+                match at['type']:
+                    case "LPAREN": 
+                        self.next_token() # discard LPAREN
+                        args = self.__parse_list_expression(terminator="RPAREN")
+                        self.next_token() # discard RPAREN
+                        return FunctionCall(name=tk['value'], arguments=args)
                     
+                    case "LSQBRACE":
+                        self.next_token() # discard LSQBRACE
+                        args = self.__parse_expression()
+                        self.next_token() # discard RSQBRACE
+                        return ArrayIndex(array=tk['value'], index=args, assign=False)
+
+                    #     return expr
                 identifier = Identifier()
                 identifier.symbol = tk['value']
 

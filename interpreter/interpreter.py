@@ -12,7 +12,7 @@ from . import BinaryExpr, Identifier, AssignmentExpr, UnaryExpr, ArrayIndex, Mem
 from . import NodeType, Statement, Program
 from . import Environment
 # value constructors
-from . import MK_NULL, MK_BOOL, MK_NUMBER, MK_STRING, MK_LIST, is_iterable, is_mutable_iterable
+from . import MK_VALUE, MK_NULL, MK_BOOL, MK_NUMBER, MK_STRING, MK_LIST, is_iterable, is_mutable_iterable
 
 
 
@@ -98,7 +98,8 @@ def evaluate_for_block(for_block, env: Environment) -> Any:
     evaluate(for_block.initialising_expr, env)
     if isinstance(for_block.step, BinaryExpr):
         for_block.step = evaluate(for_block.step, env)
-    while env.get_var(for_block.initialiser).value != for_block.limit.value:
+    limit = evaluate(for_block.limit, env)
+    while env.get_var(for_block.initialiser).value != limit.value: 
         evaluate_program(for_block, env)
         env.assign_var(for_block.initialiser, MK_NUMBER(env.get_var(for_block.initialiser).value + (for_block.step.value or 1)))
     
@@ -132,7 +133,7 @@ def evaluate_assignment_expr(expr: AssignmentExpr, env: Environment) -> RuntimeV
 
 
 def evaluate_member_expr(expr: MemberExpr, env: Environment) -> RuntimeVal:
-    object_ = env.get_var(expr.name)
+    object_ = evaluate(expr.name, env)
     method = expr.method
     if expr.is_attribute:
         if not hasattr(object_, "attribute_set"):
@@ -141,7 +142,7 @@ def evaluate_member_expr(expr: MemberExpr, env: Environment) -> RuntimeVal:
         if method not in object_.attribute_set:
             raise NameError(f"Attribute {method} not found in object {expr.name}")
         
-        return object_.attribute_set[method]
+        return object_.attribute_set[method]()
 
     arguments = evaluate_list_expression(expr.arguments, env)
     if "method_set" in dir(object_):
@@ -164,7 +165,8 @@ def evaluate_array_index(expr: ArrayIndex, env: Environment) -> RuntimeVal:
         raise RuntimeError(f"Index {expr.index} is not valid, index={index}")
 
     if not expr.assign:
-        return array.get_index(index.value)
+        res = array.get_index(index.value)
+        return res
     
     if not is_mutable_iterable(array):
         raise TypeError(f"Name {expr.array} is not a mutable iterable")

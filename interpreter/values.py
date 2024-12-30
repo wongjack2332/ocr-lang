@@ -1,5 +1,5 @@
 from typing import Any, Self
-
+import re
 
 class ValueType:
     def __init__(self, value_type: str) -> None:
@@ -73,11 +73,11 @@ class NumberVal(RuntimeVal):
 class StringVal(RuntimeVal):
     def __init__(self, value: str = '') -> None:
         super().__init__('STRING')
-        self.value: str = value
+        self.value: str = value 
         self.length = len(self.value)
         self.attribute_set = {
             "value": self.value,
-            "length": MK_NUMBER(self.length)
+            "length": lambda: self.get_length()
         }
 
         self.method_set = {
@@ -85,9 +85,12 @@ class StringVal(RuntimeVal):
             "left": self.left,
             "right": self.right,
             "upper": self.upper,
-            "lower": self.lower
+            "lower": self.lower,
+            "split": self.split,
         }
-    
+
+    def get_length(self):
+        return MK_NUMBER(self.length) 
 
     def substring(self, x, i):
         """returns i characters starting from x"""
@@ -105,6 +108,13 @@ class StringVal(RuntimeVal):
     def lower(self):
         return MK_STRING(self.value.lower())
     
+    def split(self, delimiter=None):
+        if delimiter is None:
+            delimiter = MK_STRING(" ")
+        if re.fullmatch(r"\\\\(?:[a-z]|\'|\"|\\)+", delimiter.value) is not None:
+            delimiter = MK_STRING(delimiter.value[1:])
+        return MK_LIST(repr(self.value)[1:-1].split(delimiter.value))
+    
     @staticmethod
     def ASC(char):
         return ord(char.value)
@@ -118,13 +128,16 @@ class StringVal(RuntimeVal):
             raise IndexError(f"INDEX IS TOO LARGE, INDEX = {index}, LENGTH = {self.length}")
         
 
-        return self.value[index]
+        return MK_STRING(self.value[index])
     
     def __add__(self, other):
         return MK_STRING(self.value + other.value)
     
     def __repr__(self) -> str:
-        return self.value
+        return repr(self.value)
+    
+    def __str__(self) -> str:
+        return repr(self.value)
 
 
 class ExtName(RuntimeVal):
@@ -147,10 +160,10 @@ class ObjectVal(RuntimeVal):
 class ListVal(RuntimeVal):
     def __init__(self, value: list[Any]=[]) -> None:
         super().__init__('LIST')
-        self.value: list[Any] = value
+        self.value: list[Any] = self.create_list(value)
         self.length = len(self.value)
         self.attribute_set = {
-            "length": MK_NUMBER(self.length)
+            "length": lambda: MK_NUMBER(self.get_length())
         }
         self.method_set = {
             "append": self.append,
@@ -158,9 +171,24 @@ class ListVal(RuntimeVal):
             "insert": self.insert,
             "slice": self.slice_,
             "head": self.head,
-            "tail": self.tail
-
+            "tail": self.tail,
+            "sort": self.sort
         }
+    
+    def create_list(self, value) -> list[Any]:
+        return list(map(lambda x: MK_VALUE(x) if not isinstance(x, RuntimeVal) else x, value))
+    
+    def get_length(self) -> int:
+        return len(self.value)
+    
+    def sort(self, reverse: BoolVal | None = None) -> None:
+        if reverse is None:
+            reverse = MK_BOOL(False)
+        self.value.sort(key=lambda x: x.value, reverse=reverse.value)
+
+        print(self.length)
+
+        
     
     def append(self, value: Any) -> Any:
         self.value.append(value)
@@ -194,6 +222,9 @@ class ListVal(RuntimeVal):
     def get_index(self, index: int) -> Any:
         if index >= self.length:
             raise IndexError(f"INDEX IS TOO LARGE, INDEX = {index}, LENGTH = {self.length}")
+        
+        if not isinstance(self.value[index], RuntimeVal):
+            return MK_VALUE(self.value[index])
         
         return self.value[index]
             

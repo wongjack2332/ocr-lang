@@ -8,14 +8,18 @@ from . import NumberVal
 from . import MK_NUMBER, MK_NULL, MK_BOOL, ExtName
 from . import get_default_modules
 
-
+import time
 def run_file(lines: str, env: Environment) -> None:
     """Run file"""
     parser = Parser()
     program = parser.produce_ast(lines)
+    start = time.perf_counter()
     result = evaluate(program, env)
+    end = time.perf_counter()
     if result.value is not None:
         print(result)
+    
+    print(f"runtime: {end - start}")
     
     # print(program.build())
 

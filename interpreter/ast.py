@@ -138,7 +138,7 @@ class ArrayAssignmentExpr(Expression):
         
 
 class MemberExpr(Expression):
-    def __init__(self, name: str, method: str, arguments: ListExpression, is_attribute = False) -> None:
+    def __init__(self, name: Expression, method: str, arguments: ListExpression, is_attribute = False) -> None:
         super().__init__()
         self.node_type = NodeType('MemberExpr')
         self.name = name

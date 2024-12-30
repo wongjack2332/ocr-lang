@@ -1,0 +1,25 @@
+file = open("input.txt")
+s = file.readFile()
+s = s.split("\n")
+a = []
+b = []
+for i=0 to s.length
+    curr = s[i]
+    curr = curr.split("   ")
+    a.append(int(curr[0]))
+    b.append(int(curr[1]))
+
+next i
+
+total = 0
+for i=0 to a.length
+    counter = 0
+    for j=0 to b.length
+        if a[i] == b[j] then
+        counter = counter + 1
+        endif
+    next j
+    total = total + counter * a[i]
+next i
+
+print(total)
