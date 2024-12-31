@@ -15,4 +15,4 @@
 ## disclaimer
 - this is unfinished, like REALLY UNFINISHED
 - the basics of the language is now implemented
-- missing list operations, but otherwise completely usable
+- this thing is hella slow so any suggestions for optimisation is very welcomed
